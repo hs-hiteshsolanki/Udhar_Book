@@ -2,7 +2,7 @@
     <string name="app_name">Udhar Book</string>
 
 
-    <!--    <string name="map_key" translatable="false">AIzaSyBDiYQMQ2K7-tkBwtNq9bRFBHPN_zRynbU</string>-->
+<!--        <string name="map_key" translatable="false">AIzaSyBDiYQMQ2K7-tkBwtNq9bRFBHPN_zRynbU</string>-->
     <string name="map_key" translatable="false"></string>
 
     /* Side Navigation Bar */

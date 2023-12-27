@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import androidx.fragment.app.Fragment;
 
 public class contact_us extends Fragment {
+    // implements OnMapReadyCallback
 //implements OnMapReadyCallback
     LinearLayout wa,call,email;
     ImageView fb,github,linkedin,skype;
@@ -30,6 +31,7 @@ public class contact_us extends Fragment {
         github = root.findViewById(R.id.github);
         linkedin = root.findViewById(R.id.linkedin);
         skype = root.findViewById(R.id.skype);
+//
 
         call.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,7 +114,7 @@ public class contact_us extends Fragment {
 //            mapView.getMapAsync(this);
 //        }
 //    }
-//
+
 //    @Override
 //    public void onMapReady(GoogleMap googleMap) {
 //
@@ -120,9 +122,9 @@ public class contact_us extends Fragment {
 //
 //        mGooglemap = googleMap;
 //
-//        LatLng sydney = new LatLng(23.002466,72.546730);
+//        LatLng sydney = new LatLng(22.29161, 70.79322);
 //
-//        mGooglemap.addMarker(new MarkerOptions().position(sydney).title("Head Office")).showInfoWindow();
+//        mGooglemap.addMarker(new MarkerOptions().position(sydney).title("Office")).showInfoWindow();
 //
 //        mGooglemap.moveCamera(CameraUpdateFactory.newLatLngZoom(sydney,16.06f));
 //
