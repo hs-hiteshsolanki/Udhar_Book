@@ -1,7 +1,6 @@
 package com.ub.udharbook;
 
-import androidx.appcompat.app.AppCompatActivity;
-
+import android.Manifest;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -11,6 +10,15 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.karumi.dexter.Dexter;
+import com.karumi.dexter.PermissionToken;
+import com.karumi.dexter.listener.PermissionDeniedResponse;
+import com.karumi.dexter.listener.PermissionGrantedResponse;
+import com.karumi.dexter.listener.PermissionRequest;
+import com.karumi.dexter.listener.single.PermissionListener;
 
 public class registration extends AppCompatActivity {
 
@@ -32,6 +40,22 @@ public class registration extends AppCompatActivity {
         phone_number = findViewById(R.id.phone_number);
         error_msg = findViewById(R.id.error_msg);
         progressBar = findViewById(R.id.progressBar);
+
+
+        Dexter.withContext(getApplicationContext()).withPermission(Manifest.permission.POST_NOTIFICATIONS).withListener(new PermissionListener() {
+            @Override
+            public void onPermissionGranted(PermissionGrantedResponse permissionGrantedResponse) {
+            }
+
+            @Override
+            public void onPermissionDenied(PermissionDeniedResponse permissionDeniedResponse) {
+            }
+
+            @Override
+            public void onPermissionRationaleShouldBeShown(PermissionRequest permissionRequest, PermissionToken permissionToken) {
+                permissionToken.continuePermissionRequest();
+            }
+        }).check();
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);

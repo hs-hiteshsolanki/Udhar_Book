@@ -215,7 +215,11 @@ public class recreate_otp extends AppCompatActivity {
         counter();
 
     }
-// Notification create
+
+
+
+
+    // Notification create
     public void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "OTP Channel";

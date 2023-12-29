@@ -231,7 +231,7 @@ public class otp extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel();
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "OTP_CHANNEL_ID");
-            builder.setSmallIcon(R.drawable.ic_notification);
+            builder.setSmallIcon(R.drawable.ic_action_name);
             builder.setContentTitle("OTP");
             builder.setContentText(msg);
             builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
@@ -249,7 +249,7 @@ public class otp extends AppCompatActivity {
             notificationManager.notify(1, builder.build());
         } else {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-            builder.setSmallIcon(R.drawable.ic_notification);
+            builder.setSmallIcon(R.drawable.app_icon);
             builder.setContentTitle("OTP");
             builder.setContentText(msg);
             builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
