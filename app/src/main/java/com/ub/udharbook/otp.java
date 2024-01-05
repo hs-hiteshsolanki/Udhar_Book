@@ -290,6 +290,7 @@ public class otp extends AppCompatActivity {
 
                         // Store the OTP
                         generatedOTP = otp;
+                        showNotification();
 
                         // Notify the user about registration
                         Toast.makeText(otp.this, "OTP "+generatedOTP, Toast.LENGTH_SHORT).show();

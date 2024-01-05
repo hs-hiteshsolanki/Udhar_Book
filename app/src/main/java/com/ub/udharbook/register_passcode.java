@@ -12,6 +12,13 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.RegisterResponse;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class register_passcode extends AppCompatActivity {
 
     String phone_number;
@@ -252,6 +259,8 @@ public class register_passcode extends AppCompatActivity {
                     String passcode2 = n5+n6+n7+n8;
 
                     if(passcode1.compareTo(passcode2)==0){
+                        // Make API call to register the passcode
+                        registerPasscode(phone_number, passcode1);
 
                         Intent intent = new Intent(register_passcode.this,formdashboard.class);
                         intent.putExtra("User_number",phone_number);
@@ -316,5 +325,40 @@ public class register_passcode extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void registerPasscode(String phone, String passcode) {
+
+        Call<RegisterResponse> call = RetrofitClient.getInstance().getApi().registerPasscode(phone, passcode);
+        call.enqueue(new Callback<RegisterResponse>() {
+            @Override
+            public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                if (response.isSuccessful()){
+                    RegisterResponse registerResponse=response.body();
+                    if (registerResponse != null){
+                        // Passcode registered successfully
+                        Intent intent = new Intent(register_passcode.this, formdashboard.class);
+                        intent.putExtra("User_number", phone);
+                        intent.putExtra("Passcode", passcode);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        // Handle API error
+                        error_msg.setText("Error registering passcode");
+                    }
+                }else {
+                    // Handle unsuccessful response
+                    error_msg.setText("Unsuccessful response: " + response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                // Handle API call failure
+                error_msg.setText("Error: " + t.getMessage());
+
+            }
+        });
+
     }
 }

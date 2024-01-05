@@ -17,6 +17,10 @@ public class RegisterResponse {
     @Expose
     private String otp;
 
+    @SerializedName("error")
+    private String error;
+
+
 //    public String getStatus() {
 //        return status;
 //    }
@@ -39,5 +43,12 @@ public class RegisterResponse {
 
     public void setOtp(String otp) {
         this.otp = otp;
+    }
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 }

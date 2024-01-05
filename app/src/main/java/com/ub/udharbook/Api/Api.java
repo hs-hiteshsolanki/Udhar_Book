@@ -13,4 +13,11 @@ public interface Api {
         Call<RegisterResponse> register(
                 @Field("phone") String phone
         );
+
+        @FormUrlEncoded
+        @POST("register_passcode.php")
+        Call<RegisterResponse> registerPasscode(
+                @Field("phone") String phone,
+                @Field("passcode") String passcode
+        );
 }
