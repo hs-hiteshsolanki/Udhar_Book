@@ -19,6 +19,12 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.RegisterResponse;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class registration extends AppCompatActivity {
 
@@ -59,6 +65,7 @@ public class registration extends AppCompatActivity {
 
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
         redirectlink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -67,6 +74,7 @@ public class registration extends AppCompatActivity {
                 finish();
             }
         });
+
 
         redirectotp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,6 +88,8 @@ public class registration extends AppCompatActivity {
                     DatabaseHelper myDB = new DatabaseHelper(registration.this);
                     Cursor cursor = myDB.check_usernumber_exist(phone_no, 1);
                     if (cursor.getCount() == 0) {
+                        // If user does not exist, proceed with registration
+                        registerUser(phone_no);
                         intent = new Intent(registration.this, otp.class);
                     } else {
                         while (cursor.moveToNext()) {
@@ -109,6 +119,38 @@ public class registration extends AppCompatActivity {
             }
 
         });
+    }
+
+    private void registerUser(String user_number) {
+        Call<RegisterResponse>call= RetrofitClient.getInstance().getApi().register(user_number);
+        call.enqueue(new Callback<RegisterResponse>() {
+            @Override
+            public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                if(response.isSuccessful()){
+                    RegisterResponse registerResponse = response.body();
+                    if(registerResponse!=null){
+                        String message = registerResponse.getMessage();
+                        String otp = registerResponse.getOtp();
+                        // Handle the message and OTP as needed
+                        Toast.makeText(registration.this, "Registration successful. ", Toast.LENGTH_SHORT).show();
+                    }else {
+                        // Handle null response body
+                        Toast.makeText(registration.this, "Null response body", Toast.LENGTH_SHORT).show();
+                    }
+
+                }else {
+                    // Handle unsuccessful response
+                    Toast.makeText(registration.this, "Unsuccessful response: " + response.message(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                Toast.makeText(registration.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
     }
 
 }

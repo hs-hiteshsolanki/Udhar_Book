@@ -27,6 +27,8 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.RegisterResponse;
 
 import org.json.JSONObject;
 
@@ -38,10 +40,15 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.Random;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class otp extends AppCompatActivity {
     ImageView redirectback;
     TextView number1, number2, number3, number4, user_number, resend_timer;
     String otp, phone_number,msg;
+    String generatedOTP;
     int randomNumber, Min = 1000, Max = 9999;
 
     @Override
@@ -56,6 +63,7 @@ public class otp extends AppCompatActivity {
         number2 = findViewById(R.id.number2);
         number3 = findViewById(R.id.number3);
         number4 = findViewById(R.id.number4);
+
 
         Dexter.withContext(getApplicationContext()).withPermission(Manifest.permission.READ_SMS).withListener(new PermissionListener() {
             @Override
@@ -75,7 +83,9 @@ public class otp extends AppCompatActivity {
         phone_number = getIntent().getStringExtra("User_number");
         user_number.setText("+91-"+phone_number.substring(2));
 
-        generateOtp();
+        //generateOtp();
+        generatedOTP();
+
 
         /*if(sendOtp("RJQOS0QTTDISL4YK6R7J9O3G6AMBGXUA","HSNHV7Y5TB4I8A4M","stage",phone_number,msg,"8866103098"))
         {
@@ -203,7 +213,8 @@ public class otp extends AppCompatActivity {
             public void onClick(View view) {
                 resend_timer.setEnabled(false);
                 resend_timer.setTextColor(getResources().getColor(R.color.grey));
-                generateOtp();
+                //generateOtp();
+                generatedOTP();
                 counter();
 
             }
@@ -233,7 +244,7 @@ public class otp extends AppCompatActivity {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "OTP_CHANNEL_ID");
             builder.setSmallIcon(R.drawable.ic_action_name);
             builder.setContentTitle("OTP");
-            builder.setContentText(msg);
+            builder.setContentText(generatedOTP);//msg is randam generated otp
             builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -251,7 +262,7 @@ public class otp extends AppCompatActivity {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
             builder.setSmallIcon(R.drawable.app_icon);
             builder.setContentTitle("OTP");
-            builder.setContentText(msg);
+            builder.setContentText(generatedOTP);//msg is randam generated otp
             builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
             notificationManager.notify(1, builder.build());
@@ -262,15 +273,50 @@ public class otp extends AppCompatActivity {
         Random random = new Random();
         randomNumber = random.nextInt((Max - Min) + 1) + Min;
         msg = "Your OTP is" + randomNumber;
+        //msg = "Your OTP is" + generatedOTP;
         Toast.makeText(otp.this, "Otp is " + randomNumber, Toast.LENGTH_SHORT).show();
         showNotification();
+    }
+    private void generatedOTP() {
+        Call<RegisterResponse> call = RetrofitClient.getInstance().getApi().register(phone_number);
+        call.enqueue(new Callback<RegisterResponse>() {
+            @Override
+            public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                if (response.isSuccessful()) {
+                    RegisterResponse registerResponse = response.body();
+                    if (registerResponse != null) {
+                        String message = registerResponse.getMessage();
+                        String otp = registerResponse.getOtp();
+
+                        // Store the OTP
+                        generatedOTP = otp;
+
+                        // Notify the user about registration
+                        Toast.makeText(otp.this, "OTP "+generatedOTP, Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Handle null response body
+                        Toast.makeText(otp.this, "Null response body", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    // Handle unsuccessful response
+                    Toast.makeText(otp.this, "Unsuccessful response: " + response.message(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                Toast.makeText(otp.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     public void verify_otp() {
         otp = number1.getText().toString() + number2.getText().toString() + number3.getText().toString() + number4.getText().toString();
-        if (randomNumber == Integer.valueOf(otp)) {
+//        if (randomNumber == Integer.valueOf(otp)) {
+        if (generatedOTP.equals(otp)) {
             Intent intent = new Intent(otp.this,register_passcode.class);
             intent.putExtra("User_number",phone_number);
+
             startActivity(intent);
             finish();
             Toast.makeText(getApplicationContext(), "Phone Number Verify", Toast.LENGTH_SHORT).show();
@@ -279,8 +325,9 @@ public class otp extends AppCompatActivity {
         }
     }
 
+
     public static boolean sendOtp(String apiKey, String secretKey, String useType, String phone, String message, String senderId){
-        String url = "https://www.sms4india.com";
+        String url = "https://www.h.com";
         try{
             // construct data
             JSONObject urlParameters = new JSONObject();
@@ -336,4 +383,5 @@ public class otp extends AppCompatActivity {
             }
         }.start();
     }
+
 }

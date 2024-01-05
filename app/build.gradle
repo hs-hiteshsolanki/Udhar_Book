@@ -58,5 +58,9 @@ dependencies {
     implementation 'com.budiyev.android:code-scanner:2.1.0'
     implementation 'com.itextpdf:itextpdf:5.5.13'
 
+
+    implementation 'com.squareup.retrofit2:retrofit:2.4.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
+
     android.defaultConfig.vectorDrawables.useSupportLibrary = true
 }
