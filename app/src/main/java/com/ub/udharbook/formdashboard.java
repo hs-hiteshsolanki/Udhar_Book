@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -23,10 +24,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.Autocomplete;
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.LoginResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class formdashboard extends AppCompatActivity {
     TextView user_name, user_businessname, user_location, user_number;
@@ -95,8 +102,15 @@ public class formdashboard extends AppCompatActivity {
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     byte[] image = stream.toByteArray();
+
+                    // Convert the image byte array to Base64 string
+                    String encodedImage = Base64.encodeToString(image, Base64.DEFAULT);
+
                     DatabaseHelper myDB = new DatabaseHelper(formdashboard.this);
                     if (myDB.storeNewUserData(phone_number, name, passcode, businessname, location, image)) {
+                        //Api call
+                        storeData(phone_number, name, passcode, businessname, location, encodedImage);
+
                         SharedPreferences SharedPreferences = getSharedPreferences("UserDetails", MODE_PRIVATE);
                         SharedPreferences.Editor myEdit = SharedPreferences.edit();
                         myEdit.putBoolean("first_time_login", false);
@@ -140,7 +154,10 @@ public class formdashboard extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //ActivityCompat.requestPermissions(formdashboard.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE_GALLERY);
-                Toast.makeText(getApplicationContext(), "Feature Working Progress", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getApplicationContext(), "Feature Working Progress", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType("image/*");
+                startActivityForResult(intent, REQUEST_CODE_GALLERY);
 
             }
         });
@@ -158,7 +175,7 @@ public class formdashboard extends AppCompatActivity {
 
 
     }
-
+    //Gallery permission
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
@@ -188,6 +205,17 @@ public class formdashboard extends AppCompatActivity {
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
                 user_image.setImageBitmap(bitmap);
 
+                // Store the selected image in a byte array
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                byte[] image = stream.toByteArray();
+
+
+                // Convert the image byte array to Base64 string
+                String encodedImage = Base64.encodeToString(image, Base64.DEFAULT);
+                // Call the storeData method with the selected image
+                //storeData(phone_number, name, passcode, businessname, location, encodedImage);
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
@@ -199,5 +227,36 @@ public class formdashboard extends AppCompatActivity {
         }
 
         super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    protected void storeData(String phoneNumber, String name, String passcode, String business_name, String location, String image){
+
+        Call<LoginResponse> call = RetrofitClient.getInstance().getApi().storeUserData(phoneNumber, name, passcode, business_name, location, image);
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                if (response.isSuccessful()) {
+                    LoginResponse loginResponse = response.body();
+                    if (loginResponse != null && loginResponse.getStatus().equals("success")) {
+                        // Handle success
+                        Toast.makeText(formdashboard.this, loginResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        // Proceed with your logic
+                    } else {
+                        // Handle failure
+                        Toast.makeText(formdashboard.this, "API Error: " + loginResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    // Handle error
+                    Toast.makeText(formdashboard.this, "Network Error", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                // Handle failure
+                Toast.makeText(formdashboard.this, "API Request Failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+
     }
 }

@@ -30,16 +30,6 @@ import com.karumi.dexter.listener.single.PermissionListener;
 import com.ub.udharbook.Api.RetrofitClient;
 import com.ub.udharbook.ModelResponse.RegisterResponse;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Random;
-
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -242,7 +232,7 @@ public class otp extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel();
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "OTP_CHANNEL_ID");
-            builder.setSmallIcon(R.drawable.ic_action_name);
+            builder.setSmallIcon(R.drawable.app_icon);
             builder.setContentTitle("OTP");
             builder.setContentText(generatedOTP);//msg is randam generated otp
             builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
@@ -269,14 +259,7 @@ public class otp extends AppCompatActivity {
         }
     }
 
-    public void generateOtp(){
-        Random random = new Random();
-        randomNumber = random.nextInt((Max - Min) + 1) + Min;
-        msg = "Your OTP is" + randomNumber;
-        //msg = "Your OTP is" + generatedOTP;
-        Toast.makeText(otp.this, "Otp is " + randomNumber, Toast.LENGTH_SHORT).show();
-        showNotification();
-    }
+
     private void generatedOTP() {
         Call<RegisterResponse> call = RetrofitClient.getInstance().getApi().register(phone_number);
         call.enqueue(new Callback<RegisterResponse>() {
@@ -324,45 +307,6 @@ public class otp extends AppCompatActivity {
         } else {
             Toast.makeText(getApplicationContext(), "OTP is invalid", Toast.LENGTH_SHORT).show();
         }
-    }
-
-
-    public static boolean sendOtp(String apiKey, String secretKey, String useType, String phone, String message, String senderId){
-        String url = "https://www.h.com";
-        try{
-            // construct data
-            JSONObject urlParameters = new JSONObject();
-            urlParameters.put("apikey",apiKey);
-            urlParameters.put("secret",secretKey);
-            urlParameters.put("usetype",useType);
-            urlParameters.put("phone", phone);
-            urlParameters.put("message", URLEncoder.encode(message,"UTF-8"));
-            urlParameters.put("senderid", senderId);
-            URL obj = new URL(url + "/api/v1/sendCampaign");
-            // send data
-            HttpURLConnection httpConnection = (HttpURLConnection) obj.openConnection();
-            httpConnection.setDoOutput(true);
-            httpConnection.setRequestMethod("POST");
-            DataOutputStream wr = new DataOutputStream(httpConnection.getOutputStream());
-            wr.write(urlParameters.toString().getBytes());
-            // get the response
-            BufferedReader bufferedReader = null;
-            if (httpConnection.getResponseCode() == 200) {
-                bufferedReader = new BufferedReader(new InputStreamReader(httpConnection.getInputStream()));
-            } else {
-                bufferedReader = new BufferedReader(new InputStreamReader(httpConnection.getErrorStream()));
-            }
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                content.append(line).append("\n");
-            }
-            bufferedReader.close();
-            return true;
-        }catch(Exception ex){
-            return false;
-        }
-
     }
 
     public void counter(){

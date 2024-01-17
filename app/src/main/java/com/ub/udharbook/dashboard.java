@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.DatePicker;
@@ -20,6 +21,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,10 +37,17 @@ import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.navigation.NavigationView;
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.Data;
+import com.ub.udharbook.ModelResponse.UserDetailsResponse;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.DateFormatSymbols;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class dashboard extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, DatePickerDialog.OnDateSetListener {
 
@@ -171,6 +180,7 @@ public class dashboard extends AppCompatActivity implements NavigationView.OnNav
         SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
         user_id = sharedPreferences.getString("Id", "");
 
+        userDetails(user_id);
         final DatabaseHelper myDB = new DatabaseHelper(getApplicationContext());
         Cursor cursor = myDB.get_user_details(user_id);
         while (cursor.moveToNext()){
@@ -179,7 +189,13 @@ public class dashboard extends AppCompatActivity implements NavigationView.OnNav
             user_image = cursor.getBlob(4);
         }
 
-        final Bitmap bitmap = BitmapFactory.decodeByteArray(user_image, 0 , user_image.length);
+        final Bitmap bitmap;
+        if (user_image != null) {
+            bitmap = BitmapFactory.decodeByteArray(user_image, 0 , user_image.length);
+        } else {
+            // Handle the case where user_image is null, for example, set a default image
+            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.b);
+        }
 
         /* Side Navigation */
 
@@ -218,6 +234,61 @@ public class dashboard extends AppCompatActivity implements NavigationView.OnNav
         bottom_nav.setOnNavigationItemSelectedListener(navListener);
         getSupportFragmentManager().beginTransaction().replace(R.id.frame_container, new fragment_home_dashboard()).commit();
 
+    }
+
+    private void userDetails(String userId) {
+        Call<UserDetailsResponse> call = RetrofitClient.getInstance().getApi().getUserDetails(userId);
+        call.enqueue(new Callback<UserDetailsResponse>() {
+            @Override
+            public void onResponse(Call<UserDetailsResponse> call, Response<UserDetailsResponse> response) {
+                if (response.isSuccessful()) {
+                    UserDetailsResponse userDetailsResponse = response.body();
+                    if (userDetailsResponse != null) {
+                        // Handle the successful response
+                        Data userData = userDetailsResponse.getData();
+                        //String phoneNumber = userData.getPhone();
+                        updateUI(userData);
+
+                    } else {
+                        // Handle API response indicating failure
+                        Toast.makeText(getApplication(), "Failed to fetch user details", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    // Handle API call failure
+                    Toast.makeText(getApplication(), "API call failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserDetailsResponse> call, Throwable t) {
+                // Handle network failure
+                Toast.makeText(getApplication(), "Network error", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateUI(Data userDetailsResponse) {
+        user_name = userDetailsResponse.getName();
+        user_business_name = userDetailsResponse.getBusinessName();
+        user_image = userDetailsResponse.getImage().getBytes();
+
+        Bitmap bitmap;
+        byte[] decodedImage;
+        if (user_image != null) {
+            decodedImage = Base64.decode(userDetailsResponse.getImage().getBytes(), Base64.DEFAULT);
+           // bitmap = BitmapFactory.decodeByteArray(user_image, 0 , user_image.length);
+            bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+        } else {
+            // Handle the case where user_image is null, for example, set a default image
+            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.a);
+        }
+
+        // Now, update your UI components with the fetched data
+        //customer_image.setImageBitmap(bitmap);
+        customer_image.setImageBitmap(bitmap);
+        //Picasso.get().load(String.valueOf(bitmap)).into(customer_image);
+        customer_business_name.setText(user_business_name);
+        customer_name.setText(user_name);
     }
 
     /* Side Navigation */
@@ -260,12 +331,17 @@ public class dashboard extends AppCompatActivity implements NavigationView.OnNav
             status_bar_text.setText("Help & Support");
             getSupportFragmentManager().beginTransaction().replace(R.id.frame_container, selectedFragment).commit();
         } else if (itemId == R.id.nav_share) {
-            String message = "Hey check out my app at: https://play.google.com/store/apps/details?id=" + BuildConfig.APPLICATION_ID;
-            Intent sendIntent = new Intent();
-            sendIntent.setAction(Intent.ACTION_SEND);
-            sendIntent.putExtra(Intent.EXTRA_TEXT, message);
-            sendIntent.setType("text/plain");
-            startActivity(sendIntent);
+            String message = "Hey check out my app at: https://play.google.com/store/apps/details?id="+"";
+            try{
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, message);
+                sendIntent.setType("text/plain");
+                startActivity(sendIntent);
+            }catch (Exception e){
+                Toast.makeText(this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+
         } else if (itemId == R.id.nav_logout) {
             SharedPreferences SharedPreferences = getSharedPreferences("UserDetails", MODE_PRIVATE);
             SharedPreferences.Editor myEdit = SharedPreferences.edit();

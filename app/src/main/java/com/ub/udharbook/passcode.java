@@ -15,12 +15,19 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.LoginResponse;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class passcode extends AppCompatActivity {
 
-    TextView user_number,error_msg,re_create;
-    EditText number1,number2,number3,number4;
-    ImageView redirectback,set_passcode;
-    String phone_number,get_passcode,passcode,get_id;
+    TextView user_number, error_msg, re_create;
+    EditText number1, number2, number3, number4;
+    ImageView redirectback, set_passcode;
+    String phone_number, get_passcode, passcode, get_id;
 
     @SuppressLint("MissingInflatedId")
     @Override
@@ -28,8 +35,6 @@ public class passcode extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_passcode);
 
-        //getSupportActionBar().hide();
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         redirectback = findViewById(R.id.redirectback);
         user_number = findViewById(R.id.user_number);
@@ -55,11 +60,11 @@ public class passcode extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable editable) {
 
-                if(!number1.getText().toString().isEmpty()) {
+                if (!number1.getText().toString().isEmpty()) {
                     number2.setFocusableInTouchMode(true);
                     number2.requestFocus();
                 }
-                if(!number1.getText().toString().isEmpty() && !number2.getText().toString().isEmpty() && !number3.getText().toString().isEmpty() && !number4.getText().toString().isEmpty()){
+                if (!number1.getText().toString().isEmpty() && !number2.getText().toString().isEmpty() && !number3.getText().toString().isEmpty() && !number4.getText().toString().isEmpty()) {
                     verify_passcode();
                 }
             }
@@ -78,16 +83,15 @@ public class passcode extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable editable) {
 
-                if(number2.getText().toString().isEmpty()) {
+                if (number2.getText().toString().isEmpty()) {
                     number1.setFocusableInTouchMode(true);
                     number1.requestFocus();
-                }
-                else{
+                } else {
                     number3.setFocusableInTouchMode(true);
                     number3.requestFocus();
                 }
 
-                if(!number1.getText().toString().isEmpty() && !number2.getText().toString().isEmpty() && !number3.getText().toString().isEmpty() && !number4.getText().toString().isEmpty()){
+                if (!number1.getText().toString().isEmpty() && !number2.getText().toString().isEmpty() && !number3.getText().toString().isEmpty() && !number4.getText().toString().isEmpty()) {
                     verify_passcode();
                 }
             }
@@ -106,16 +110,15 @@ public class passcode extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable editable) {
 
-                if(number3.getText().toString().isEmpty()) {
+                if (number3.getText().toString().isEmpty()) {
                     number2.setFocusableInTouchMode(true);
                     number2.requestFocus();
-                }
-                else{
+                } else {
                     number4.setFocusableInTouchMode(true);
                     number4.requestFocus();
                 }
 
-                if(!number1.getText().toString().isEmpty() && !number2.getText().toString().isEmpty() && !number3.getText().toString().isEmpty() && !number4.getText().toString().isEmpty()){
+                if (!number1.getText().toString().isEmpty() && !number2.getText().toString().isEmpty() && !number3.getText().toString().isEmpty() && !number4.getText().toString().isEmpty()) {
                     verify_passcode();
                 }
             }
@@ -134,11 +137,11 @@ public class passcode extends AppCompatActivity {
             @Override
             public void afterTextChanged(Editable editable) {
 
-                if(number4.getText().toString().isEmpty()) {
+                if (number4.getText().toString().isEmpty()) {
                     number3.setFocusableInTouchMode(true);
                     number3.requestFocus();
                 }
-                if(!number1.getText().toString().isEmpty() && !number2.getText().toString().isEmpty() && !number3.getText().toString().isEmpty() && !number4.getText().toString().isEmpty()){
+                if (!number1.getText().toString().isEmpty() && !number2.getText().toString().isEmpty() && !number3.getText().toString().isEmpty() && !number4.getText().toString().isEmpty()) {
                     verify_passcode();
                 }
             }
@@ -148,28 +151,28 @@ public class passcode extends AppCompatActivity {
         get_id = intent.getStringExtra("Id");
         get_passcode = intent.getStringExtra("Passcode");
         phone_number = intent.getStringExtra("User_number");
-        user_number.setText("+91-"+phone_number.substring(2));
+        user_number.setText("+91-" + phone_number.substring(2));
         set_passcode.setOnClickListener(new View.OnClickListener() {
-            int count=0;
+            int count = 0;
+
             @Override
             public void onClick(View view) {
 
-                if(count==0){
+                if (count == 0) {
                     set_passcode.setImageResource(R.drawable.ic_eye_slash_solid);
                     number1.setTransformationMethod(null);
                     number2.setTransformationMethod(null);
                     number3.setTransformationMethod(null);
                     number4.setTransformationMethod(null);
-                    count=1;
+                    count = 1;
 
-                }
-                else{
+                } else {
                     set_passcode.setImageResource(R.drawable.ic_eye_solid);
                     number1.setTransformationMethod(new PasswordTransformationMethod());
                     number2.setTransformationMethod(new PasswordTransformationMethod());
                     number3.setTransformationMethod(new PasswordTransformationMethod());
                     number4.setTransformationMethod(new PasswordTransformationMethod());
-                    count=0;
+                    count = 0;
                 }
             }
         });
@@ -198,20 +201,60 @@ public class passcode extends AppCompatActivity {
     public void verify_passcode() {
 
         passcode = number1.getText().toString() + number2.getText().toString() + number3.getText().toString() + number4.getText().toString();
-        if (passcode.compareTo(get_passcode) == 0) {
-            Intent intent = new Intent(passcode.this,dashboard.class);
-            SharedPreferences SharedPreferences = getSharedPreferences("UserDetails",MODE_PRIVATE);
-            SharedPreferences.Editor myEdit = SharedPreferences.edit();
-            myEdit.putBoolean("is_logged_in",true);
-            myEdit.putString("Id",get_id);
-            myEdit.putString("user_phone_number",phone_number);
-            myEdit.putString("user_passcode",get_passcode);
-            myEdit.commit();
-            startActivity(intent);
-            finish();
-            Toast.makeText(getApplicationContext(), "Welcome", Toast.LENGTH_SHORT).show();
-        } else {
-            error_msg.setText("Invalid Passcode");
-        }
+        loginPasscode(get_id,passcode);
+
+    }
+
+    private void loginPasscode(String get_id, String passcode) {
+        Call<LoginResponse> call = RetrofitClient.getInstance().getApi().loginPasscode(get_id, passcode);
+        call.enqueue(new Callback<LoginResponse>() {
+            @Override
+            public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
+                if (response.isSuccessful()) {
+                    LoginResponse loginResponse=response.body();
+                    if (loginResponse != null) {
+                        // Handle the response
+                        String status = loginResponse.getStatus();
+                        String message = loginResponse.getMessage();
+
+                        if ("success".equals(status)) {
+                            // Passcode is valid, proceed to dashboard
+                            saveUserDetails(get_id, passcode);
+                            navigateToDashboard();
+                        } else {
+                            // Invalid passcode, show error message
+                            error_msg.setText("Invalid Passcode");
+                        }
+                    }
+                }else {
+                    // Handle the error response
+                    error_msg.setText("Error occurred. Please try again.");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<LoginResponse> call, Throwable t) {
+                // Handle network or other errors
+                error_msg.setText("Network error. Please check your connection.");
+            }
+        });
+    }
+    private void saveUserDetails(String get_id, String passcode) {
+        // Save user details in SharedPreferences
+        SharedPreferences SharedPreferences = getSharedPreferences("UserDetails", MODE_PRIVATE);
+        SharedPreferences.Editor myEdit = SharedPreferences.edit();
+        myEdit.putBoolean("is_logged_in", true);
+        myEdit.putString("Id", get_id);
+        myEdit.putString("user_phone_number", phone_number);
+        myEdit.putString("user_passcode", get_passcode);
+        myEdit.commit();
+        myEdit.apply();
+    }
+
+    private void navigateToDashboard() {
+        Intent intent = new Intent(passcode.this, dashboard.class);
+        startActivity(intent);
+        finish();
+        Toast.makeText(getApplicationContext(), "Welcome", Toast.LENGTH_SHORT).show();
     }
 }

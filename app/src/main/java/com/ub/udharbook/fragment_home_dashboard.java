@@ -6,13 +6,6 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,19 +13,29 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.ub.udharbook.ModelResponse.Transaction;
+
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 
 public class fragment_home_dashboard extends Fragment {
     String user_id;
-    TextView debitbalance,creditbalance,netbalance,see_all;
-    ImageView net_amount_symbol,debit_amount_symbol,credit_amount_symbol;
-    int debit_amount,credit_amount;
+    TextView debitbalance, creditbalance, netbalance, see_all;
+    ImageView net_amount_symbol, debit_amount_symbol, credit_amount_symbol;
+    int debit_amount, credit_amount;
     Cursor cursor;
-    ArrayList<String> transaction_name,transaction_phone_number,transaction_time,transaction_amount,transaction_sender_id,transaction_id;
+    ArrayList<String> transaction_name, transaction_phone_number, transaction_time, transaction_amount, transaction_sender_id, transaction_id;
     ArrayList<Bitmap> transaction_image;
     TransactionAdapter transactionAdapter;
     RecyclerView transactionrecyclerview;
@@ -45,6 +48,7 @@ public class fragment_home_dashboard extends Fragment {
         View root = inflater.inflate(R.layout.fragment_home_dashboard, container, false);
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
         user_id = sharedPreferences.getString("Id", "");
+
         netbalance = root.findViewById(R.id.netbalance);
         net_amount_symbol = root.findViewById(R.id.net_amount_symbol);
         debitbalance = root.findViewById(R.id.debitbalance);
@@ -68,35 +72,34 @@ public class fragment_home_dashboard extends Fragment {
                 getFragmentManager().beginTransaction().replace(R.id.frame_container, new fragment_transaction_dashboard()).commit();
             }
         });
-
         DatabaseHelper myDB = new DatabaseHelper(getContext());
 
         debit_amount = myDB.debit_transaction_amount(user_id);
-        debitbalance.setText("- "+debit_amount);
+        debitbalance.setText("- " + debit_amount);
         debit_amount_symbol.setImageDrawable(getResources().getDrawable(R.drawable.debit_rs_symbol));
 
         credit_amount = myDB.credit_transaction_amount(user_id);
-        creditbalance.setText("+ "+credit_amount);
+        creditbalance.setText("+ " + credit_amount);
         credit_amount_symbol.setImageDrawable(getResources().getDrawable(R.drawable.credit_rs_symbol));
 
-        if((credit_amount - debit_amount) >=0 ){
-            netbalance.setText("+ "+Math.abs(credit_amount - debit_amount));
+        if ((credit_amount - debit_amount) >= 0) {
+            netbalance.setText("+ " + Math.abs(credit_amount - debit_amount));
             netbalance.setTextColor(getResources().getColor(R.color.sucess));
             net_amount_symbol.setImageDrawable(getResources().getDrawable(R.drawable.credit_rs_symbol));
-        }else{
-            netbalance.setText("- "+Math.abs(credit_amount - debit_amount));
+        } else {
+            netbalance.setText("- " + Math.abs(credit_amount - debit_amount));
             netbalance.setTextColor(getResources().getColor(R.color.warning));
             net_amount_symbol.setImageDrawable(getResources().getDrawable(R.drawable.debit_rs_symbol));
         }
 
         cursor = myDB.all_transaction(user_id);
-        if (cursor == null){
+        if (cursor == null) {
             Toast.makeText(getContext(), "No Data available", Toast.LENGTH_SHORT).show();
-        }else{
-            while (cursor.moveToNext()){
+        } else {
+            while (cursor.moveToNext()) {
                 transaction_phone_number.add(cursor.getString(1));
                 transaction_name.add(cursor.getString(2));
-                transaction_image.add(BitmapFactory.decodeByteArray(cursor.getBlob(3), 0 , cursor.getBlob(3).length));
+                transaction_image.add(BitmapFactory.decodeByteArray(cursor.getBlob(3), 0, cursor.getBlob(3).length));
                 transaction_sender_id.add(cursor.getString(5));
                 transaction_amount.add(cursor.getString(7));
 
@@ -112,10 +115,39 @@ public class fragment_home_dashboard extends Fragment {
                 transaction_id.add(cursor.getString(9));
             }
         }
-        transactionAdapter = new TransactionAdapter(getContext(),user_id,transaction_sender_id,transaction_name,transaction_phone_number,transaction_amount,transaction_time,transaction_image,transaction_id);
+        transactionAdapter = new TransactionAdapter(getContext(), user_id, transaction_sender_id, transaction_name, transaction_phone_number, transaction_amount, transaction_time, transaction_image, transaction_id);
         transactionrecyclerview.setAdapter(transactionAdapter);
         transactionrecyclerview.setLayoutManager(new LinearLayoutManager(getContext()));
 
         return root;
     }
+
+
+    private void updateAdapter(List<Transaction> transactions) {
+        ArrayList<String> transaction_sender_id = new ArrayList<>();
+        ArrayList<String> transaction_name = new ArrayList<>();
+        ArrayList<String> transaction_phone_number = new ArrayList<>();
+        ArrayList<String> transaction_amount = new ArrayList<>();
+        ArrayList<String> transaction_time = new ArrayList<>();
+        ArrayList<Bitmap> transaction_image = new ArrayList<>();
+        ArrayList<String> transaction_id = new ArrayList<>();
+
+        for (Transaction transaction : transactions) {
+            transaction_sender_id.add(transaction.getSenderId());
+            transaction_name.add(transaction.getName());
+            transaction_phone_number.add(transaction.getPhoneNumber());
+            transaction_amount.add(transaction.getAmount());
+            transaction_time.add(transaction.getTime());
+            // Assuming 'getBitmapImage()' is a method in your Transaction class to get the Bitmap image
+            transaction_image.add(transaction.getBitmapImage());
+            transaction_id.add(transaction.getId());
+        }
+
+        // Now update the adapter with the new data
+        transactionAdapter = new TransactionAdapter(getContext(), user_id, transaction_sender_id, transaction_name, transaction_phone_number, transaction_amount, transaction_time, transaction_image, transaction_id);
+        transactionrecyclerview.setAdapter(transactionAdapter);
+        transactionrecyclerview.setLayoutManager(new LinearLayoutManager(getContext()));
+    }
+
+
 }

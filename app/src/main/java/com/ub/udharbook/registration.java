@@ -80,7 +80,6 @@ public class registration extends AppCompatActivity {
             @Override
             public void onClick(View view) {
 
-
                 String phone_no = phone_number.getText().toString();
                 if (!phone_no.isEmpty() && phone_no.length() == 10 && phone_no.matches("^[0-9]{10}")) {
                     phone_number.setError(null);

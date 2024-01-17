@@ -27,31 +27,24 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.RegisterResponse;
 
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.util.Random;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class recreate_otp extends AppCompatActivity {
 
     ImageView redirectback;
     TextView number1, number2, number3, number4, user_number, resend_timer;
     String otp, phone_number, msg;
-    int randomNumber, Min = 1000, Max = 9999;
+    String generatedOTP;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recreate_otp);
-
-        //getSupportActionBar().hide();
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         redirectback = findViewById(R.id.redirectback);
         user_number = findViewById(R.id.user_number);
@@ -80,16 +73,8 @@ public class recreate_otp extends AppCompatActivity {
         phone_number = getIntent().getStringExtra("User_number");
         user_number.setText("+91-" + phone_number.substring(2));
 
-        generateOtp();
+        generatedOTP();
 
-        /*if(sendOtp("RJQOS0QTTDISL4YK6R7J9O3G6AMBGXUA","HSNHV7Y5TB4I8A4M","stage",phone_number,msg,"9409324362"))
-        {
-            Toast.makeText(otp.this, "Otp is" + randomNumber, Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Toast.makeText(otp.this, "Error SMS ", Toast.LENGTH_SHORT).show();
-        }*/
 
         number1.addTextChangedListener(new TextWatcher() {
             @Override
@@ -206,7 +191,7 @@ public class recreate_otp extends AppCompatActivity {
             public void onClick(View view) {
                 resend_timer.setEnabled(false);
                 resend_timer.setTextColor(getResources().getColor(R.color.grey));
-                generateOtp();
+                generatedOTP();
                 counter();
 
             }
@@ -215,8 +200,6 @@ public class recreate_otp extends AppCompatActivity {
         counter();
 
     }
-
-
 
 
     // Notification create
@@ -240,7 +223,7 @@ public class recreate_otp extends AppCompatActivity {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "OTP_CHANNEL_ID");
             builder.setSmallIcon(R.drawable.ic_notification);
             builder.setContentTitle("OTP");
-            builder.setContentText(msg);
+            builder.setContentText(generatedOTP);//msg is randam generated otp
             builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -258,24 +241,51 @@ public class recreate_otp extends AppCompatActivity {
             NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
             builder.setSmallIcon(R.drawable.ic_notification);
             builder.setContentTitle("OTP");
-            builder.setContentText(msg);
+            builder.setContentText(generatedOTP);//msg is randam generated otp
             builder.setPriority(NotificationCompat.PRIORITY_DEFAULT);
             NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
             notificationManager.notify(1, builder.build());
         }
     }
 
-    public void generateOtp(){
-        Random random = new Random();
-        randomNumber = random.nextInt((Max - Min) + 1) + Min;
-        msg = "Your OTP is" + randomNumber;
-        Toast.makeText(recreate_otp.this, "Otp is " + randomNumber, Toast.LENGTH_SHORT).show();
-        showNotification(); // Call the showNotification() method after generating the OTP
+    private void generatedOTP() {
+        Call<RegisterResponse> call = RetrofitClient.getInstance().getApi().register(phone_number);
+        call.enqueue(new Callback<RegisterResponse>() {
+            @Override
+            public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                if (response.isSuccessful()) {
+                    RegisterResponse registerResponse = response.body();
+                    if (registerResponse != null) {
+                        String message = registerResponse.getMessage();
+                        String otp = registerResponse.getOtp();
+
+                        // Store the OTP
+                        generatedOTP = otp;
+                        showNotification();
+
+                        // Notify the user about registration
+                        Toast.makeText(recreate_otp.this, "OTP "+generatedOTP, Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Handle null response body
+                        Toast.makeText(recreate_otp.this, "Null response body", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    // Handle unsuccessful response
+                    Toast.makeText(recreate_otp.this, "Unsuccessful response: " + response.message(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                Toast.makeText(recreate_otp.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
     }
+
 
     public void verify_otp() {
         otp = number1.getText().toString() + number2.getText().toString() + number3.getText().toString() + number4.getText().toString();
-        if (randomNumber == Integer.valueOf(otp)) {
+        if (generatedOTP.equals(otp)) {
             Intent intent = new Intent(recreate_otp.this,recreate_passcode.class);
             intent.putExtra("User_number",phone_number);
             startActivity(intent);
@@ -286,43 +296,6 @@ public class recreate_otp extends AppCompatActivity {
         }
     }
 
-    public static boolean sendOtp(String apiKey, String secretKey, String useType, String phone, String message, String senderId){
-        String url = "https://www.sms4india.com";
-        try{
-            // construct data
-            JSONObject urlParameters = new JSONObject();
-            urlParameters.put("apikey",apiKey);
-            urlParameters.put("secret",secretKey);
-            urlParameters.put("usetype",useType);
-            urlParameters.put("phone", phone);
-            urlParameters.put("message", URLEncoder.encode(message,"UTF-8"));
-            urlParameters.put("senderid", senderId);
-            URL obj = new URL(url + "/api/v1/sendCampaign");
-            // send data
-            HttpURLConnection httpConnection = (HttpURLConnection) obj.openConnection();
-            httpConnection.setDoOutput(true);
-            httpConnection.setRequestMethod("POST");
-            DataOutputStream wr = new DataOutputStream(httpConnection.getOutputStream());
-            wr.write(urlParameters.toString().getBytes());
-            // get the response
-            BufferedReader bufferedReader = null;
-            if (httpConnection.getResponseCode() == 200) {
-                bufferedReader = new BufferedReader(new InputStreamReader(httpConnection.getInputStream()));
-            } else {
-                bufferedReader = new BufferedReader(new InputStreamReader(httpConnection.getErrorStream()));
-            }
-            StringBuilder content = new StringBuilder();
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                content.append(line).append("\n");
-            }
-            bufferedReader.close();
-            return true;
-        }catch(Exception ex){
-            return false;
-        }
-
-    }
     public void counter(){
 
         new CountDownTimer(30000, 1000) {

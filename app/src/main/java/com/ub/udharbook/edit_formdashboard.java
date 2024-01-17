@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -16,6 +15,8 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,11 +32,19 @@ import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.model.AutocompleteActivityMode;
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.Data;
+import com.ub.udharbook.ModelResponse.RegisterResponse;
+import com.ub.udharbook.ModelResponse.UserDetailsResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class edit_formdashboard extends Fragment {
     String user_id, db_name, db_phone_number, db_business_name, db_location, update_name, update_businessname, update_location;
@@ -49,16 +58,18 @@ public class edit_formdashboard extends Fragment {
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
         user_id = sharedPreferences.getString("Id", "");
+        Log.d("id",user_id);
 
-        DatabaseHelper myDB = new DatabaseHelper(getContext());
-        Cursor cursor = myDB.get_user_details(user_id);
-        while (cursor.moveToNext()) {
-            db_phone_number = cursor.getString(0);
-            db_name = cursor.getString(1);
-            db_business_name = cursor.getString(2);
-            db_location = cursor.getString(3);
-            db_image = BitmapFactory.decodeByteArray(cursor.getBlob(4), 0, cursor.getBlob(4).length);
-        }
+
+//        DatabaseHelper myDB = new DatabaseHelper(getContext());
+//        Cursor cursor = myDB.get_user_details(user_id);
+//        while (cursor.moveToNext()) {
+//            db_phone_number = cursor.getString(0);
+//            db_name = cursor.getString(1);
+//            db_business_name = cursor.getString(2);
+//            db_location = cursor.getString(3);
+//            db_image = BitmapFactory.decodeByteArray(cursor.getBlob(4), 0, cursor.getBlob(4).length);
+//        }
 
         user_number = root.findViewById(R.id.user_number);
         user_name = root.findViewById(R.id.user_name);
@@ -67,11 +78,12 @@ public class edit_formdashboard extends Fragment {
         update_details = root.findViewById(R.id.update_details);
         user_image = root.findViewById(R.id.user_image);
 
-        user_number.setText("+91-" + db_phone_number.substring(2));
-        user_name.setText(db_name);
-        user_businessname.setText(db_business_name);
-        user_location.setText(db_location);
-        user_image.setImageBitmap(db_image);
+        userDetails(user_id);
+//        user_number.setText("+91-" + db_phone_number.substring(2));
+//        user_name.setText(db_name);
+//        user_businessname.setText(db_business_name);
+//        user_location.setText(db_location);
+//        user_image.setImageBitmap(db_image);
 
         user_name.addTextChangedListener(new TextWatcher() {
             @Override
@@ -117,8 +129,11 @@ public class edit_formdashboard extends Fragment {
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     byte[] image = stream.toByteArray();
+                    String encodedImage = Base64.encodeToString(image, Base64.DEFAULT);
                     DatabaseHelper myDB = new DatabaseHelper(getContext());
                     if (myDB.storeUpdateUserData(user_id, update_name, update_businessname, update_location, image)) {
+                        updateUserData(user_id, update_name, update_businessname, update_location, encodedImage);
+
                         Toast.makeText(getContext(), "Details Updated", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(getContext(), dashboard.class);
                         startActivity(intent);
@@ -211,4 +226,70 @@ public class edit_formdashboard extends Fragment {
             }
         }
     }
+    private void updateUserData(String user_id,String update_name,String update_businessname,String update_location,String image) {
+        Call<RegisterResponse> call =  RetrofitClient.getInstance().getApi().update_User(user_id, update_name, update_businessname, update_location, image);
+        call.enqueue(new Callback<RegisterResponse>() {
+            @Override
+            public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                if (response.isSuccessful()) {
+                    // Handle success
+                    Toast.makeText(getContext(), "Details Updated", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(getContext(), dashboard.class);
+                    startActivity(intent);
+                } else {
+                    Toast.makeText(getContext(), "Something Went wrong", Toast.LENGTH_SHORT).show();
+                }
+            }
+            @Override
+            public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "API Request Failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
+    private void userDetails(String userId) {
+        Call<UserDetailsResponse> call = RetrofitClient.getInstance().getApi().getUserDetails(userId);
+        call.enqueue(new Callback<UserDetailsResponse>() {
+            @Override
+            public void onResponse(Call<UserDetailsResponse> call, Response<UserDetailsResponse> response) {
+                if (response.isSuccessful()) {
+                    UserDetailsResponse userDetailsResponse = response.body();
+                    if (userDetailsResponse != null) {
+                        // Handle the successful response
+                        Data userData = userDetailsResponse.getData();
+                        //String phoneNumber = userData.getPhone();
+                        updateUI(userData);
+
+                    } else {
+                        // Handle API response indicating failure
+                        Toast.makeText(getContext(), "Failed to fetch user details", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    // Handle API call failure
+                    Toast.makeText(getContext(), "API call failed", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserDetailsResponse> call, Throwable t) {
+                // Handle network failure
+                Toast.makeText(getContext(), "Network error", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateUI(Data userData) {
+        // Set the data to your fields
+        user_number.setText("+91-" +userData.getPhone().substring(2));
+        user_name.setText(userData.getName());
+        user_businessname.setText(userData.getBusinessName());
+        user_location.setText(userData.getLocation());
+
+        // Decode Base64 image and set it to ImageView
+        byte[] decodedImage = Base64.decode(userData.getImage(), Base64.DEFAULT);
+        Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+        user_image.setImageBitmap(decodedBitmap);
+    }
+
+
 }
