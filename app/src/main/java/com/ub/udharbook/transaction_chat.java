@@ -29,6 +29,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.card.MaterialCardView;
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.RegisterResponse;
+import com.ub.udharbook.ModelResponse.SaveContactResponse;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -38,6 +41,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class transaction_chat extends AppCompatActivity implements DatePickerDialog.OnDateSetListener {
 
@@ -143,6 +150,7 @@ public class transaction_chat extends AppCompatActivity implements DatePickerDia
                             DatabaseHelper myDB = new DatabaseHelper(getApplicationContext());
                             String tost_message = null;
                             if (myDB.storeNewDebitTransaction(user_id, Friend_id, transaction_balance_text, transaction_name_text, transaction_date_text)) {
+                                storeNewDebitTransaction(user_id, Friend_id, transaction_balance_text, transaction_name_text, transaction_date_text);
                                 tost_message = "Transaction Added";
                             } else {
                                 tost_message = "Something went wrong";
@@ -163,7 +171,7 @@ public class transaction_chat extends AppCompatActivity implements DatePickerDia
                     }
                 });
                 bottomSheetDialog.show();
-             }
+            }
         });
 
 
@@ -220,6 +228,7 @@ public class transaction_chat extends AppCompatActivity implements DatePickerDia
                             DatabaseHelper myDB = new DatabaseHelper(getApplicationContext());
                             String tost_message = null;
                             if (myDB.storeNewCreditTransaction(user_id, Friend_id, transaction_balance_text, transaction_name_text, transaction_date_text)) {
+                                storeNewCreditTransaction(user_id, Friend_id, transaction_balance_text, transaction_name_text, transaction_date_text);
                                 tost_message = "Transaction Added";
                             } else {
                                 tost_message = "Something went wrong";
@@ -250,6 +259,60 @@ public class transaction_chat extends AppCompatActivity implements DatePickerDia
         transaction_chat_recycle.setLayoutManager(new LinearLayoutManager(getApplicationContext()));
         transaction_chat_recycle.smoothScrollToPosition(transaction_amount.size());
 
+    }
+
+    private void storeNewCreditTransaction(String userId, String friendId, String transactionBalanceText, String transactionNameText, String transactionDateText) {
+        Call<RegisterResponse> call = RetrofitClient.getInstance().getApi().credit_transaction(userId, friendId, transactionBalanceText, transactionNameText, transactionDateText);
+        call.enqueue(new Callback<RegisterResponse>() {
+            @Override
+            public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                if (response.isSuccessful()) {
+                    // Handle successful response
+                    RegisterResponse apiResponse = response.body();
+                    Toast.makeText(transaction_chat.this, apiResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                } else {
+                    // Handle error
+                    Toast.makeText(transaction_chat.this, "Error: " + response.message(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                Toast.makeText(transaction_chat.this, "Failed to make API call", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void storeNewDebitTransaction(String userId, String friendId, String transactionBalanceText, String transactionNameText, String transactionDateText) {
+        Call<SaveContactResponse> call=RetrofitClient.getInstance().getApi().debit_Transaction(userId,friendId,transactionBalanceText,transactionNameText,transactionDateText);
+        call.enqueue(new Callback<SaveContactResponse>() {
+            @Override
+            public void onResponse(Call<SaveContactResponse> call, Response<SaveContactResponse> response) {
+                if (response.isSuccessful()) {
+                    SaveContactResponse apiResponse = response.body();
+                    if (apiResponse != null) {
+                        if (apiResponse.getMessage() != null) {
+                            // Transaction Added successfully
+                            String toastMessage = apiResponse.getMessage();
+                            Toast.makeText(transaction_chat.this, toastMessage, Toast.LENGTH_SHORT).show();
+                        } else if (apiResponse.getError() != null) {
+                            // Error adding transaction
+                            String errorMessage = apiResponse.getError();
+                            Toast.makeText(transaction_chat.this, errorMessage, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } else {
+                    // Handle error
+                    Toast.makeText(transaction_chat.this, "Error: " + response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SaveContactResponse> call, Throwable t) {
+                Toast.makeText(transaction_chat.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
     }
 
     public void onBackPressed(View view) {

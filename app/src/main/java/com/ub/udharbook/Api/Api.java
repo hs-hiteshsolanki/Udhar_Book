@@ -3,6 +3,7 @@ package com.ub.udharbook.Api;
 import com.ub.udharbook.ModelResponse.Credit_Debit_Response;
 import com.ub.udharbook.ModelResponse.LoginResponse;
 import com.ub.udharbook.ModelResponse.RegisterResponse;
+import com.ub.udharbook.ModelResponse.SaveContactResponse;
 import com.ub.udharbook.ModelResponse.TransactionsResponse;
 import com.ub.udharbook.ModelResponse.UserDetailsResponse;
 
@@ -82,5 +83,33 @@ public interface Api {
             @Field("business_name") String updateBusinessName,
             @Field("location") String updateLocation,
             @Field("image") String updateImage
+    );
+    @FormUrlEncoded
+    @POST("save_contact.php") // Change this URL based on your server configuration save friend data
+    Call<SaveContactResponse> saveContact(
+            @Field("id") String userId,
+            @Field("phone") String contactNumber,
+            @Field("name") String contactName,
+            @Field("image") String contactImage
+    );
+
+    @FormUrlEncoded
+    @POST("credit_transaction.php") // Replace with the actual PHP file name
+    Call<RegisterResponse> credit_transaction(
+            @Field("id") String userId,
+            @Field("friend_id") String friendId,
+            @Field("amount") String amount,
+            @Field("transaction_reason") String transactionReason,
+            @Field("date") String date
+    );
+
+    @FormUrlEncoded
+    @POST("debit_transaction.php")
+    Call<SaveContactResponse> debit_Transaction(
+            @Field("id") String userId,
+            @Field("friend_id") String friendId,
+            @Field("amount") String amount,
+            @Field("remarks") String remarks,
+            @Field("date") String date
     );
 }

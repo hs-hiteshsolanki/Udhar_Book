@@ -96,6 +96,7 @@
 
         </TextView>
     </RelativeLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/transactionrecyclerview"
         android:layout_width="match_parent"

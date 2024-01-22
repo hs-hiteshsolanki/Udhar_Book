@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,23 +39,30 @@ import com.karumi.dexter.listener.PermissionDeniedResponse;
 import com.karumi.dexter.listener.PermissionGrantedResponse;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.single.PermissionListener;
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.SaveContactResponse;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class fragment_customer_dashboard extends Fragment {
     RelativeLayout add_contact;
     ImageView imageView;
     TextView save_contact, error_msg_contact_number, error_msg_contact_name;
-    String contact_number_text, contact_name_text, user_id,user_phone_number, database_name = "", database_id;
+    String contact_number_text, contact_name_text, user_id, user_phone_number, database_name = "", database_id;
     EditText contact_number, contact_name;
     TextInputLayout contact_name_layout;
-    ArrayList<String> friend_id,transaction_name, transaction_phone_number;
+    ArrayList<String> friend_id, transaction_name, transaction_phone_number;
     ArrayList<Integer> transaction_amount;
     ArrayList<Bitmap> transaction_image;
     ContactAdapter contactAdapter;
     RecyclerView transactionrecyclerview;
-    Cursor cursor,cursor1;
+    Cursor cursor, cursor1;
     RelativeLayout relative_layout;
     ConstraintLayout constraintlayout;
     CodeScanner codeScanner;
@@ -74,7 +82,7 @@ public class fragment_customer_dashboard extends Fragment {
         relative_layout = root.findViewById(R.id.relative_layout);
         constraintlayout = root.findViewById(R.id.constraintlayout);
         scannView = root.findViewById(R.id.scannerView);
-        codeScanner = new CodeScanner(getContext(),scannView);
+        codeScanner = new CodeScanner(getContext(), scannView);
 
         friend_id = new ArrayList<>();
         transaction_name = new ArrayList<>();
@@ -90,17 +98,17 @@ public class fragment_customer_dashboard extends Fragment {
             Toast.makeText(getContext(), "No Data available", Toast.LENGTH_SHORT).show();
         } else {
             while (cursor.moveToNext() && cursor1.moveToNext()) {
-                int credit_amount =Integer.parseInt(cursor.getString(4));
-                int debit_amount =Integer.parseInt(cursor1.getString(4));
+                int credit_amount = Integer.parseInt(cursor.getString(4));
+                int debit_amount = Integer.parseInt(cursor1.getString(4));
                 friend_id.add(cursor.getString(0));
                 transaction_name.add(cursor.getString(1));
                 transaction_phone_number.add(cursor.getString(2));
-                transaction_image.add(BitmapFactory.decodeByteArray(cursor.getBlob(3), 0 , cursor.getBlob(3).length));
+                transaction_image.add(BitmapFactory.decodeByteArray(cursor.getBlob(3), 0, cursor.getBlob(3).length));
                 transaction_amount.add((credit_amount - debit_amount));
             }
         }
 
-        contactAdapter = new ContactAdapter(getContext(),friend_id,transaction_name,transaction_phone_number,transaction_amount,transaction_image);
+        contactAdapter = new ContactAdapter(getContext(), friend_id, transaction_name, transaction_phone_number, transaction_amount, transaction_image);
         transactionrecyclerview.setAdapter(contactAdapter);
         transactionrecyclerview.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -140,7 +148,7 @@ public class fragment_customer_dashboard extends Fragment {
                                 permissionToken.continuePermissionRequest();
                             }
                         }).check();
-                        if(temp_count[0] == 0){
+                        if (temp_count[0] == 0) {
                             relative_layout.setVisibility(View.GONE);
                             constraintlayout.setVisibility(View.VISIBLE);
                             bottomSheetDialog.hide();
@@ -195,9 +203,9 @@ public class fragment_customer_dashboard extends Fragment {
                         if (contact_number_text.length() == 10 && !contact_number_text.isEmpty() && contact_number_text.matches("^[0-9]{10}$")) {
                             contact_number_text = "91" + contact_number_text;
 
-                            if(user_phone_number.compareTo(contact_number_text) != 0){
-                                Cursor cursor2=myDB.check_friend_exist(user_id,contact_number_text);
-                                if(cursor2.getCount()==0){
+                            if (user_phone_number.compareTo(contact_number_text) != 0) {
+                                Cursor cursor2 = myDB.check_friend_exist(user_id, contact_number_text);
+                                if (cursor2.getCount() == 0) {
                                     if (count == 0) {
                                         Cursor cursor = myDB.check_usernumber_exist(contact_number_text, 1);
                                         if (cursor.getCount() != 0) {
@@ -223,52 +231,52 @@ public class fragment_customer_dashboard extends Fragment {
                                             } else {
                                                 Toast.makeText(getContext(), "Something went wrong", Toast.LENGTH_SHORT).show();
                                             }
-                                        }
-                                        else {
+                                        } else {
                                             Resources res = getResources();
-                                            String uri = "@drawable/"+contact_name_text.substring(0,1).toLowerCase();
-                                            int imageResource = getResources().getIdentifier(uri,null,getContext().getPackageName());
+                                            String uri = "@drawable/" + contact_name_text.substring(0, 1).toLowerCase();
+                                            int imageResource = getResources().getIdentifier(uri, null, getContext().getPackageName());
                                             Drawable drawable = res.getDrawable(imageResource);
-                                            Bitmap bitmap = ((BitmapDrawable)drawable).getBitmap();
+                                            Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
                                             ByteArrayOutputStream stream = new ByteArrayOutputStream();
                                             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                                             byte[] bitMapData = stream.toByteArray();
-                                            if (myDB.storeNewFriendUserData(user_id, contact_number_text, contact_name_text,bitMapData)) {
+                                            if (myDB.storeNewFriendUserData(user_id, contact_number_text, contact_name_text, bitMapData)) {
+
+                                                String encodedImage = Base64.encodeToString(bitMapData, Base64.DEFAULT);
+                                                storeNewFriendUser(user_id,contact_number_text, contact_name_text, encodedImage);
+
                                                 Toast.makeText(getContext(), "New Contact Added", Toast.LENGTH_SHORT).show();
                                             } else {
                                                 Toast.makeText(getContext(), "Something went wrong", Toast.LENGTH_SHORT).show();
                                             }
                                         }
-                                        getFragmentManager().beginTransaction().replace(R.id.frame_container,new fragment_customer_dashboard()).commit();
+                                        getFragmentManager().beginTransaction().replace(R.id.frame_container, new fragment_customer_dashboard()).commit();
                                         bottomSheetDialog.hide();
 
                                     } else {
                                         if (count == 1) {
                                             if (contact_name_text.isEmpty()) {
                                                 error_msg_contact_name.setText("Contact Name is required");
-                                            }else if(!contact_name_text.matches("^[a-zA-Z]{1}[a-zA-Z ]*$")){
+                                            } else if (!contact_name_text.matches("^[a-zA-Z]{1}[a-zA-Z ]*$")) {
                                                 error_msg_contact_name.setText("Require Character and Whitespace Only");
                                             }
                                         }
 
                                     }
                                     count = 1;
-                                }
-                                else{
+                                } else {
                                     error_msg_contact_number.setText("Already added in your contact list");
                                 }
-                            }
-                            else{
+                            } else {
                                 error_msg_contact_number.setText("This number can't added.");
                             }
 
-                        }
-                        else {
+                        } else {
                             if (contact_number_text.isEmpty()) {
                                 error_msg_contact_number.setText("Contact Number is required");
                             } else if (contact_number_text.length() != 10) {
                                 error_msg_contact_number.setText("Contact Number is not valid");
-                            }else if(!contact_number_text.matches("^[0-9]{10}$")){
+                            } else if (!contact_number_text.matches("^[0-9]{10}$")) {
                                 error_msg_contact_number.setText("Require only 10 digit");
                             }
                         }
@@ -281,6 +289,43 @@ public class fragment_customer_dashboard extends Fragment {
         });
 
         return root;
+    }
+
+    private void storeNewFriendUser(String user_id, String contactNumber, String contactName, String encodedImage) {
+        Call<SaveContactResponse> call = RetrofitClient.getInstance().getApi().saveContact(user_id,contactNumber, contactName, encodedImage);
+        call.enqueue(new Callback<SaveContactResponse>() {
+            @Override
+            public void onResponse(Call<SaveContactResponse> call, Response<SaveContactResponse> response) {
+                if (response.isSuccessful()) {
+                    SaveContactResponse saveContactResponse = response.body();
+                    if (saveContactResponse != null && saveContactResponse.isSuccess()) {
+                        // Success
+                        String message = saveContactResponse.getMessage();
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        // Error
+                        if (getContext() != null) {
+                            Toast.makeText(getContext(), "API Error: " + saveContactResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                } else {
+                    // Handle HTTP error
+                    if (getContext() != null) {
+                        Toast.makeText(getContext(), "HTTP Error: " + response.code(), Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<SaveContactResponse> call, Throwable t) {
+                // Handle failure
+                if (getContext() != null) {
+                    Toast.makeText(getContext(), "API Call Failed: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     @Override
