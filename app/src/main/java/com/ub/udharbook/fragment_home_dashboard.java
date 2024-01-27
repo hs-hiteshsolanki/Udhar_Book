@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,14 +20,19 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ub.udharbook.Api.RetrofitClient;
 import com.ub.udharbook.ModelResponse.Transaction;
-
+import com.ub.udharbook.ModelResponse.TransactionsResponse;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class fragment_home_dashboard extends Fragment {
@@ -66,6 +72,7 @@ public class fragment_home_dashboard extends Fragment {
         transaction_image = new ArrayList<>();
         transaction_id = new ArrayList<>();
 
+        displayData(user_id);
         see_all.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -93,7 +100,8 @@ public class fragment_home_dashboard extends Fragment {
         }
 
         cursor = myDB.all_transaction(user_id);
-        if (cursor == null) {
+
+            if (cursor == null) {
             Toast.makeText(getContext(), "No Data available", Toast.LENGTH_SHORT).show();
         } else {
             while (cursor.moveToNext()) {
@@ -122,32 +130,68 @@ public class fragment_home_dashboard extends Fragment {
         return root;
     }
 
+    private void displayData(String userId) {
+        Call<TransactionsResponse> call = RetrofitClient.getInstance().getApi().getAllTransactions(userId);
+        call.enqueue(new Callback<TransactionsResponse>() {
+            @Override
+            public void onResponse(Call<TransactionsResponse> call, Response<TransactionsResponse> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    TransactionsResponse apiResponse = response.body();
 
-    private void updateAdapter(List<Transaction> transactions) {
-        ArrayList<String> transaction_sender_id = new ArrayList<>();
-        ArrayList<String> transaction_name = new ArrayList<>();
-        ArrayList<String> transaction_phone_number = new ArrayList<>();
-        ArrayList<String> transaction_amount = new ArrayList<>();
-        ArrayList<String> transaction_time = new ArrayList<>();
-        ArrayList<Bitmap> transaction_image = new ArrayList<>();
-        ArrayList<String> transaction_id = new ArrayList<>();
+                    // For example:
+                    debitbalance.setText("- " + apiResponse.getDebitAmount());
+                    creditbalance.setText("+ " + apiResponse.getCreditAmount());
+                    netbalance.setText(apiResponse.getNetBalance() >= 0 ? "+ " + apiResponse.getNetBalance() : "- " + Math.abs(apiResponse.getNetBalance()));
+
+                    // Handle transactions list
+                    List<Transaction> transactions = apiResponse.getTransactions();
+                    if (transactions != null) {
+                        updateRecyclerView(transactions);
+                    } else {
+                        Toast.makeText(getContext(), "No transactions available", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getContext(), "Failed to get data from API", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<TransactionsResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "API call failed", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void updateRecyclerView(List<Transaction> transactions) {
+
+        transaction_name.clear();
+        transaction_phone_number.clear();
+        transaction_sender_id.clear();
+        transaction_time.clear();
+        transaction_amount.clear();
+        transaction_image.clear();
+        transaction_id.clear();
 
         for (Transaction transaction : transactions) {
-            transaction_sender_id.add(transaction.getSenderId());
-            transaction_name.add(transaction.getName());
             transaction_phone_number.add(transaction.getPhoneNumber());
+            transaction_name.add(transaction.getName());
+            transaction_sender_id.add(transaction.getSenderId());
             transaction_amount.add(transaction.getAmount());
             transaction_time.add(transaction.getTime());
-            // Assuming 'getBitmapImage()' is a method in your Transaction class to get the Bitmap image
-            transaction_image.add(transaction.getBitmapImage());
-            transaction_id.add(transaction.getId());
+            transaction_id.add(transaction.getTransactionId());
+            // Assuming the image is represented as a String URL, use Glide to load it into the ImageView
+            //Glide.with(requireContext()).load(transaction.getImage()).into(transaction_image);
+            // Handle the possibility of a null image
+                // Assuming the image is represented as a Base64-encoded string
+            byte[] decodedBytes = Base64.decode(transaction.getImage().getBytes(), Base64.DEFAULT);
+            Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+            transaction_image.add(decodedBitmap);
+
         }
 
-        // Now update the adapter with the new data
-        transactionAdapter = new TransactionAdapter(getContext(), user_id, transaction_sender_id, transaction_name, transaction_phone_number, transaction_amount, transaction_time, transaction_image, transaction_id);
-        transactionrecyclerview.setAdapter(transactionAdapter);
-        transactionrecyclerview.setLayoutManager(new LinearLayoutManager(getContext()));
+        transactionAdapter.notifyDataSetChanged();
     }
 
 
 }
+

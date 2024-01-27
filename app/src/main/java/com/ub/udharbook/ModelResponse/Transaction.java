@@ -1,45 +1,43 @@
 package com.ub.udharbook.ModelResponse;
 
-import android.graphics.Bitmap;
-
 import com.google.gson.annotations.SerializedName;
 
 public class Transaction {
-    @SerializedName("id")
-    private String id;
-
-    @SerializedName("senderId")
-    private String senderId;
+    @SerializedName("phone")
+    private String phoneNumber;
 
     @SerializedName("name")
     private String name;
 
-    @SerializedName("phoneNumber")
-    private String phoneNumber;
+    @SerializedName("image") // Assuming the image is represented as a String
+    private String image;
+
+    @SerializedName("sender_id")
+    private String senderId;
 
     @SerializedName("amount")
     private String amount;
 
-    @SerializedName("time")
+    @SerializedName("created_time")
     private String time;
-    private Bitmap bitmapImage;
 
-    // Constructor, getters, and setters
+    @SerializedName("transaction_id")
+    private String transactionId;
 
-    public String getId() {
-        return id;
-    }
-
-    public String getSenderId() {
-        return senderId;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
     public String getName() {
         return name;
     }
 
-    public String getPhoneNumber() {
-        return phoneNumber;
+    public String getImage() {
+        return image;
+    }
+
+    public String getSenderId() {
+        return senderId;
     }
 
     public String getAmount() {
@@ -50,7 +48,7 @@ public class Transaction {
         return time;
     }
 
-    public Bitmap getBitmapImage() {
-        return bitmapImage;
+    public String getTransactionId() {
+        return transactionId;
     }
 }

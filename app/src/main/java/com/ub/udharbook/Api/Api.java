@@ -52,24 +52,6 @@ public interface Api {
     );
 
     @FormUrlEncoded
-    @POST("debit_transaction_amount.php")
-    Call<Credit_Debit_Response> getDebitTransactionAmount(
-            @Field("id") String userId
-    );
-
-    @FormUrlEncoded
-    @POST("credit_transaction_amount.php")
-    Call<Credit_Debit_Response> getCreditTransactionAmount(
-            @Field("id") String userId
-    );
-
-    @FormUrlEncoded
-    @POST("all_transactions.php")
-    Call<TransactionsResponse> getAllTransactions(
-            @Field("user_id") String userId
-    );
-
-    @FormUrlEncoded
     @POST("user_details.php")
     Call<UserDetailsResponse> getUserDetails(
             @Field("id") String userId
@@ -111,5 +93,23 @@ public interface Api {
             @Field("amount") String amount,
             @Field("remarks") String remarks,
             @Field("date") String date
+    );
+
+    @FormUrlEncoded
+    @POST("debit_transaction_amount.php")
+    Call<Credit_Debit_Response> getDebitTransactionAmount(
+            @Field("id") String userId
+    );
+
+    @FormUrlEncoded
+    @POST("credit_transaction_amount.php")
+    Call<Credit_Debit_Response> getCreditTransactionAmount(
+            @Field("id") String userId
+    );
+
+    @FormUrlEncoded
+    @POST("get_transactions1.php")
+    Call<TransactionsResponse> getAllTransactions(
+            @Field("id") String userId
     );
 }
