@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -22,14 +21,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.libraries.places.api.Places;
-import com.google.android.libraries.places.api.model.Place;
-import com.google.android.libraries.places.widget.Autocomplete;
 import com.ub.udharbook.Api.RetrofitClient;
 import com.ub.udharbook.ModelResponse.LoginResponse;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -40,14 +35,14 @@ public class formdashboard extends AppCompatActivity {
     String phone_number, name, businessname, location, passcode;
     ImageView redirect, user_image;
     final int REQUEST_CODE_GALLERY = 999;
+    Bitmap bitmap;
+    Uri selectedImageUri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_formdashboard);
 
-        //getSupportActionBar().hide();
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         user_name = findViewById(R.id.user_name);
         user_businessname = findViewById(R.id.user_businessname);
@@ -94,14 +89,42 @@ public class formdashboard extends AppCompatActivity {
                     user_name.setError(null);
                     user_businessname.setError(null);
                     user_location.setError(null);
-                    Resources res = getResources();
-                    String uri = "@drawable/" + name.substring(0, 1).toLowerCase();
-                    int imageResource = getResources().getIdentifier(uri, null, getPackageName());
-                    Drawable drawable = res.getDrawable(imageResource);
-                    Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                    byte[] image = stream.toByteArray();
+
+                    //Gallary Image
+//                    ByteArrayOutputStream stream1 = new ByteArrayOutputStream();
+//                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream1);
+//                    byte[] image1 = stream1.toByteArray();
+//
+//
+//                    Resources res = getResources();
+//                    String uri = "@drawable/" + name.substring(0, 1).toLowerCase();
+//                    int imageResource = getResources().getIdentifier(uri, null, getPackageName());
+//                    Drawable drawable = res.getDrawable(imageResource);
+//                    Bitmap bitmap = ((BitmapDrawable) drawable).getBitmap();
+//                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+//                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+//                    byte[] image = stream.toByteArray();
+//
+                    byte[] image;
+                    if (selectedImageUri != null) {
+                        // Gallery Image is selected
+                            bitmap = BitmapUtils.uriToBitmap(getApplicationContext(), selectedImageUri); // Convert URI to Bitmap
+                            ByteArrayOutputStream stream1 = new ByteArrayOutputStream();
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream1);
+                            image = stream1.toByteArray(); // Convert Bitmap to byte array
+
+                    } else {
+                        // Drawable Image is used
+                        Resources res = getResources();
+                        String uri = "@drawable/" + name.substring(0, 1).toLowerCase();
+                        int imageResource = getResources().getIdentifier(uri, null, getPackageName());
+                        Drawable drawable = res.getDrawable(imageResource);
+                        bitmap = ((BitmapDrawable) drawable).getBitmap(); // Convert Drawable to Bitmap
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                        image = stream.toByteArray(); // Convert Bitmap to byte array
+
+                    }
 
                     // Convert the image byte array to Base64 string
                     String encodedImage = Base64.encodeToString(image, Base64.DEFAULT);
@@ -153,16 +176,13 @@ public class formdashboard extends AppCompatActivity {
         user_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //ActivityCompat.requestPermissions(formdashboard.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE_GALLERY);
-                //Toast.makeText(getApplicationContext(), "Feature Working Progress", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(Intent.ACTION_PICK);
-                intent.setType("image/*");
-                startActivityForResult(intent, REQUEST_CODE_GALLERY);
+
+                opengallary();
 
             }
         });
-
         Places.initialize(getApplicationContext(), String.valueOf(R.string.map_key));
+
         /*user_location.setFocusable(false);
         user_location.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -173,8 +193,8 @@ public class formdashboard extends AppCompatActivity {
             }
         });*/
 
-
     }
+
     //Gallery permission
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -193,43 +213,27 @@ public class formdashboard extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
-            Uri uri = data.getData();
+        if (resultCode == RESULT_OK) {
 
-            try {
-                InputStream inputStream = getContentResolver().openInputStream(uri);
+            // compare the resultCode with the
+            // SELECT_PICTURE constant
+            if (requestCode == 200) {
+                // Get the url of the image from data
+                selectedImageUri = data.getData();
+                if (null != selectedImageUri) {
+                    // update the preview image in the layout
+                    user_image.setImageURI(selectedImageUri);
 
-                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                user_image.setImageBitmap(bitmap);
-
-                // Store the selected image in a byte array
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
-                byte[] image = stream.toByteArray();
-
-
-                // Convert the image byte array to Base64 string
-                String encodedImage = Base64.encodeToString(image, Base64.DEFAULT);
-                // Call the storeData method with the selected image
-                //storeData(phone_number, name, passcode, businessname, location, encodedImage);
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                    bitmap = BitmapUtils.uriToBitmap(this, selectedImageUri);
+                }
             }
         }
-
-        if (requestCode == 100 && resultCode == RESULT_OK) {
-            Place place = Autocomplete.getPlaceFromIntent(data);
-            user_location.setText(place.getName());
-        }
-
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
-    protected void storeData(String phoneNumber, String name, String passcode, String business_name, String location, String image){
+    protected void storeData(String phoneNumber, String name, String passcode, String business_name, String location, String image) {
 
         Call<LoginResponse> call = RetrofitClient.getInstance().getApi().storeUserData(phoneNumber, name, passcode, business_name, location, image);
         call.enqueue(new Callback<LoginResponse>() {
@@ -259,4 +263,16 @@ public class formdashboard extends AppCompatActivity {
         });
 
     }
+
+    public void opengallary() {
+        // intent of the type image
+        Intent i = new Intent();
+        i.setType("image/*");
+        i.setAction(Intent.ACTION_GET_CONTENT);
+
+        // pass the constant to compare it
+        // with the returned requestCode
+        startActivityForResult(Intent.createChooser(i, "Select Picture"), 200);
+    }
+
 }

@@ -5,18 +5,18 @@ import static android.app.Activity.RESULT_OK;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Base64;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,7 +38,6 @@ import com.ub.udharbook.ModelResponse.RegisterResponse;
 import com.ub.udharbook.ModelResponse.UserDetailsResponse;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,17 +48,17 @@ import retrofit2.Response;
 public class edit_formdashboard extends Fragment {
     String user_id, db_name, db_phone_number, db_business_name, db_location, update_name, update_businessname, update_location;
     TextView user_number, user_name, user_businessname, user_location, update_details;
-    Bitmap db_image;
     ImageView user_image;
+    Bitmap db_image;
     final int REQUEST_CODE_GALLERY = 999;
+    Bitmap bitmap;
+    Uri selectedImageUri;
 
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_edit_formdashboard, container, false);
 
         SharedPreferences sharedPreferences = getActivity().getSharedPreferences("UserDetails", Context.MODE_PRIVATE);
         user_id = sharedPreferences.getString("Id", "");
-        Log.d("id",user_id);
-
 
 //        DatabaseHelper myDB = new DatabaseHelper(getContext());
 //        Cursor cursor = myDB.get_user_details(user_id);
@@ -79,11 +78,13 @@ public class edit_formdashboard extends Fragment {
         user_image = root.findViewById(R.id.user_image);
 
         userDetails(user_id);
+
 //        user_number.setText("+91-" + db_phone_number.substring(2));
 //        user_name.setText(db_name);
 //        user_businessname.setText(db_business_name);
 //        user_location.setText(db_location);
 //        user_image.setImageBitmap(db_image);
+        updateUI_sqlite();
 
         user_name.addTextChangedListener(new TextWatcher() {
             @Override
@@ -121,6 +122,7 @@ public class edit_formdashboard extends Fragment {
                     user_name.setError(null);
                     user_businessname.setError(null);
                     user_location.setError(null);
+
                     Resources res = getResources();
                     String uri = "@drawable/" + update_name.substring(0, 1).toLowerCase();
                     int imageResource = getResources().getIdentifier(uri, null, getContext().getPackageName());
@@ -129,6 +131,7 @@ public class edit_formdashboard extends Fragment {
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     byte[] image = stream.toByteArray();
+
                     String encodedImage = Base64.encodeToString(image, Base64.DEFAULT);
                     DatabaseHelper myDB = new DatabaseHelper(getContext());
                     if (myDB.storeUpdateUserData(user_id, update_name, update_businessname, update_location, image)) {
@@ -140,8 +143,7 @@ public class edit_formdashboard extends Fragment {
                     } else {
                         Toast.makeText(getContext(), "Something Went wrong", Toast.LENGTH_SHORT).show();
                     }
-                }
-                else {
+                } else {
                     if (update_name.isEmpty()) {
                         user_name.setError("Field cannot be empty");
                     } else if (!update_name.matches("^[a-zA-Z]{1}[a-zA-Z ]*$")) {
@@ -170,64 +172,29 @@ public class edit_formdashboard extends Fragment {
         user_image.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*if(ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-                {
-                    requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 2000);
-                }
-                else {
-                    startGallery();
-                }*/
+                //opengallary();
+
                 Toast.makeText(getContext(), "Feature Working Progress", Toast.LENGTH_SHORT).show();
             }
         });
 
         Places.initialize(getContext(), String.valueOf(R.string.map_key));
-        user_location.setFocusable(false);
+        user_location.setFocusable(true);
         user_location.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 List<Place.Field> fieldList = Arrays.asList(Place.Field.ADDRESS, Place.Field.LAT_LNG, Place.Field.NAME);
                 Intent intent = new Autocomplete.IntentBuilder(AutocompleteActivityMode.OVERLAY, fieldList).build(getContext());
                 startActivityForResult(intent, 100);
+                //Toast.makeText(getContext(), "can`t change location", Toast.LENGTH_SHORT).show();
             }
         });
 
         return root;
     }
 
-    public byte[] imageViewToByte(ImageView image) {
-        Bitmap bitmap = ((BitmapDrawable) image.getDrawable()).getBitmap();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] byteArray = stream.toByteArray();
-        return byteArray;
-    }
-
-    private void startGallery() {
-        Intent cameraIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        cameraIntent.setType("image/*");
-        if (cameraIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            startActivityForResult(cameraIntent, 1000);
-        }
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK) {
-            if (requestCode == 1000) {
-                Uri returnUri = data.getData();
-                Bitmap bitmapImage = null;
-                try {
-                    bitmapImage = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), returnUri);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                user_image.setImageBitmap(bitmapImage);
-            }
-        }
-    }
-    private void updateUserData(String user_id,String update_name,String update_businessname,String update_location,String image) {
-        Call<RegisterResponse> call =  RetrofitClient.getInstance().getApi().update_User(user_id, update_name, update_businessname, update_location, image);
+    private void updateUserData(String user_id, String update_name, String update_businessname, String update_location, String image) {
+        Call<RegisterResponse> call = RetrofitClient.getInstance().getApi().update_User(user_id, update_name, update_businessname, update_location, image);
         call.enqueue(new Callback<RegisterResponse>() {
             @Override
             public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
@@ -236,10 +203,12 @@ public class edit_formdashboard extends Fragment {
                     Toast.makeText(getContext(), "Details Updated", Toast.LENGTH_SHORT).show();
                     Intent intent = new Intent(getContext(), dashboard.class);
                     startActivity(intent);
+                    getActivity().finish();
                 } else {
                     Toast.makeText(getContext(), "Something Went wrong", Toast.LENGTH_SHORT).show();
                 }
             }
+
             @Override
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
                 Toast.makeText(getContext(), "API Request Failed", Toast.LENGTH_SHORT).show();
@@ -247,6 +216,7 @@ public class edit_formdashboard extends Fragment {
         });
 
     }
+
     private void userDetails(String userId) {
         Call<UserDetailsResponse> call = RetrofitClient.getInstance().getApi().getUserDetails(userId);
         call.enqueue(new Callback<UserDetailsResponse>() {
@@ -280,16 +250,85 @@ public class edit_formdashboard extends Fragment {
 
     private void updateUI(Data userData) {
         // Set the data to your fields
-        user_number.setText("+91-" +userData.getPhone().substring(2));
-        user_name.setText(userData.getName());
-        user_businessname.setText(userData.getBusinessName());
-        user_location.setText(userData.getLocation());
+        if (userData != null) {
+            user_number.setText("+91-" + userData.getPhone().substring(2));
+            user_name.setText(userData.getName());
+            user_businessname.setText(userData.getBusinessName());
+            user_location.setText(userData.getLocation());
 
-        // Decode Base64 image and set it to ImageView
-        byte[] decodedImage = Base64.decode(userData.getImage(), Base64.DEFAULT);
-        Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
-        user_image.setImageBitmap(decodedBitmap);
+            // Decode Base64 image and set it to ImageView
+            byte[] decodedImage = Base64.decode(userData.getImage(), Base64.DEFAULT);
+            Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+            user_image.setImageBitmap(decodedBitmap);
+        }else {
+            updateUI_sqlite();
+        }
     }
 
+    private void updateUI_sqlite() {
+        DatabaseHelper myDB = new DatabaseHelper(getContext());
+        Cursor cursor = myDB.get_user_details(user_id);
+        while (cursor.moveToNext()) {
+            db_phone_number = cursor.getString(0);
+            db_name = cursor.getString(1);
+            db_business_name = cursor.getString(2);
+            db_location = cursor.getString(3);
+            db_image = BitmapFactory.decodeByteArray(cursor.getBlob(4), 0, cursor.getBlob(4).length);
+        }
+        user_number.setText("+91-" + db_phone_number.substring(2));
+        user_name.setText(db_name);
+        user_businessname.setText(db_business_name);
+        user_location.setText(db_location);
+        user_image.setImageBitmap(db_image);
+    }
 
+    //Gallery permission
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        if (requestCode == REQUEST_CODE_GALLERY) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Intent intent = new Intent(Intent.ACTION_PICK);
+                intent.setType("image/*");
+                startActivityForResult(intent, REQUEST_CODE_GALLERY);
+            } else {
+                Toast.makeText(getContext(), "You don't have permission to access file location!", Toast.LENGTH_SHORT).show();
+            }
+            return;
+        }
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK) {
+
+            // compare the resultCode with the
+            // SELECT_PICTURE constant
+            if (requestCode == 200) {
+                // Get the url of the image from data
+                selectedImageUri = data.getData();
+                if (null != selectedImageUri) {
+                    // update the preview image in the layout
+                    user_image.setImageURI(selectedImageUri);
+
+                    bitmap = BitmapUtils.uriToBitmap(getContext(), selectedImageUri);
+                }
+            }
+        }
+    }
+
+    public void opengallary() {
+        // intent of the type image
+        Intent i = new Intent();
+        i.setType("image/*");
+        i.setAction(Intent.ACTION_GET_CONTENT);
+
+        // pass the constant to compare it
+        // with the returned requestCode
+        startActivityForResult(Intent.createChooser(i, "Select Picture"), 200);
+    }
 }

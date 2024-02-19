@@ -181,21 +181,22 @@ public class dashboard extends AppCompatActivity implements NavigationView.OnNav
         user_id = sharedPreferences.getString("Id", "");
 
         userDetails(user_id);
-        final DatabaseHelper myDB = new DatabaseHelper(getApplicationContext());
-        Cursor cursor = myDB.get_user_details(user_id);
-        while (cursor.moveToNext()){
-            user_name = cursor.getString(1);
-            user_business_name = cursor.getString(2);
-            user_image = cursor.getBlob(4);
-        }
 
-        final Bitmap bitmap;
-        if (user_image != null) {
-            bitmap = BitmapFactory.decodeByteArray(user_image, 0 , user_image.length);
-        } else {
-            // Handle the case where user_image is null, for example, set a default image
-            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.b);
-        }
+//        final DatabaseHelper myDB = new DatabaseHelper(getApplicationContext());
+//        Cursor cursor = myDB.get_user_details(user_id);
+//        while (cursor.moveToNext()){
+//            user_name = cursor.getString(1);
+//            user_business_name = cursor.getString(2);
+//            user_image = cursor.getBlob(4);
+//        }
+//
+//        final Bitmap bitmap;
+//        if (user_image != null) {
+//            bitmap = BitmapFactory.decodeByteArray(user_image, 0 , user_image.length);
+//        } else {
+//            // Handle the case where user_image is null, for example, set a default image
+//            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.u);
+//        }
 
         /* Side Navigation */
 
@@ -211,9 +212,10 @@ public class dashboard extends AppCompatActivity implements NavigationView.OnNav
         customer_name = hView.findViewById(R.id.customer_name);
         edit_button = hView.findViewById(R.id.edit_button);
 
-        customer_image.setImageBitmap(bitmap);
-        customer_business_name.setText(user_business_name);
-        customer_name.setText(user_name);
+//        customer_image.setImageBitmap(bitmap);
+//        customer_business_name.setText(user_business_name);
+//        customer_name.setText(user_name);
+        updateUI_sqlite();
 
         edit_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -268,27 +270,52 @@ public class dashboard extends AppCompatActivity implements NavigationView.OnNav
     }
 
     private void updateUI(Data userDetailsResponse) {
-        user_name = userDetailsResponse.getName();
-        user_business_name = userDetailsResponse.getBusinessName();
-        user_image = userDetailsResponse.getImage().getBytes();
+        if(userDetailsResponse != null) {
+            user_name = userDetailsResponse.getName();
+            user_business_name = userDetailsResponse.getBusinessName();
+            user_image = userDetailsResponse.getImage().getBytes();
 
-        Bitmap bitmap;
-        byte[] decodedImage;
-        if (user_image != null) {
-            decodedImage = Base64.decode(userDetailsResponse.getImage().getBytes(), Base64.DEFAULT);
-           // bitmap = BitmapFactory.decodeByteArray(user_image, 0 , user_image.length);
-            bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
-        } else {
-            // Handle the case where user_image is null, for example, set a default image
-            bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.a);
+            Bitmap bitmap;
+            byte[] decodedImage;
+            if (user_image != null) {
+                decodedImage = Base64.decode(userDetailsResponse.getImage().getBytes(), Base64.DEFAULT);
+                // bitmap = BitmapFactory.decodeByteArray(user_image, 0 , user_image.length);
+                bitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
+            } else {
+                // Handle the case where user_image is null, for example, set a default image
+                bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.u);
+            }
+
+            // Now, update your UI components with the fetched data
+            //customer_image.setImageBitmap(bitmap);
+            customer_image.setImageBitmap(bitmap);
+            //Picasso.get().load(String.valueOf(bitmap)).into(customer_image);
+            customer_business_name.setText(user_business_name);
+            customer_name.setText(user_name);
         }
+        else {
+            updateUI_sqlite();
+        }
+    }
+   public void updateUI_sqlite(){
+       final DatabaseHelper myDB = new DatabaseHelper(getApplicationContext());
+       Cursor cursor = myDB.get_user_details(user_id);
+       while (cursor.moveToNext()){
+           user_name = cursor.getString(1);
+           user_business_name = cursor.getString(2);
+           user_image = cursor.getBlob(4);
+       }
 
-        // Now, update your UI components with the fetched data
-        //customer_image.setImageBitmap(bitmap);
-        customer_image.setImageBitmap(bitmap);
-        //Picasso.get().load(String.valueOf(bitmap)).into(customer_image);
-        customer_business_name.setText(user_business_name);
-        customer_name.setText(user_name);
+       final Bitmap bitmap;
+       if (user_image != null) {
+           bitmap = BitmapFactory.decodeByteArray(user_image, 0 , user_image.length);
+       } else {
+           // Handle the case where user_image is null, for example, set a default image
+           bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.u);
+       }
+       customer_image.setImageBitmap(bitmap);
+       customer_business_name.setText(user_business_name);
+       customer_name.setText(user_name);
     }
 
     /* Side Navigation */

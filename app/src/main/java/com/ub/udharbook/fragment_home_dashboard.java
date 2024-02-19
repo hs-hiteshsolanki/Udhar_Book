@@ -72,7 +72,7 @@ public class fragment_home_dashboard extends Fragment {
         transaction_image = new ArrayList<>();
         transaction_id = new ArrayList<>();
 
-        displayData(user_id);
+        //displayData(user_id);
         see_all.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

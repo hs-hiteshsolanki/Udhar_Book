@@ -77,15 +77,6 @@ public class otp extends AppCompatActivity {
         generatedOTP();
 
 
-        /*if(sendOtp("RJQOS0QTTDISL4YK6R7J9O3G6AMBGXUA","HSNHV7Y5TB4I8A4M","stage",phone_number,msg,"8866103098"))
-        {
-            Toast.makeText(otp.this, "Otp is" + randomNumber, Toast.LENGTH_SHORT).show();
-        }
-        else
-        {
-            Toast.makeText(otp.this, "Error SMS ", Toast.LENGTH_SHORT).show();
-        }*/
-
         number1.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {

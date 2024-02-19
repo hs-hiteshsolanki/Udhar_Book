@@ -129,7 +129,19 @@ public class registration extends AppCompatActivity {
                     RegisterResponse registerResponse = response.body();
                     if(registerResponse!=null){
                         String message = registerResponse.getMessage();
-                        String otp = registerResponse.getOtp();
+                        String error =registerResponse.getError();
+                        String userId = registerResponse.getUserId();
+                        String passcode = registerResponse.getPasscode();
+
+                        if (error != null && error.equals("User already exists")) {
+                            // User already exists, start Passcode activity
+                            Intent intent = new Intent(registration.this, passcode.class);
+                            intent.putExtra("User_number", user_number);
+                            intent.putExtra("Id", userId);
+                            intent.putExtra("Passcode", passcode);
+                            startActivity(intent);
+                            finish();
+                        }
                         // Handle the message and OTP as needed
                         Toast.makeText(registration.this, "Registration successful. ", Toast.LENGTH_SHORT).show();
                     }else {

@@ -201,7 +201,14 @@ public class passcode extends AppCompatActivity {
     public void verify_passcode() {
 
         passcode = number1.getText().toString() + number2.getText().toString() + number3.getText().toString() + number4.getText().toString();
-        loginPasscode(get_id,passcode);
+        loginPasscode(get_id, passcode);
+        if (passcode.compareTo(get_passcode) == 0) {
+            saveUserDetails(get_id, passcode);
+            navigateToDashboard();
+        } else {
+            error_msg.setText("Invalid Passcode");
+        }
+
 
     }
 
@@ -211,7 +218,7 @@ public class passcode extends AppCompatActivity {
             @Override
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 if (response.isSuccessful()) {
-                    LoginResponse loginResponse=response.body();
+                    LoginResponse loginResponse = response.body();
                     if (loginResponse != null) {
                         // Handle the response
                         String status = loginResponse.getStatus();
@@ -226,7 +233,7 @@ public class passcode extends AppCompatActivity {
                             error_msg.setText("Invalid Passcode");
                         }
                     }
-                }else {
+                } else {
                     // Handle the error response
                     error_msg.setText("Error occurred. Please try again.");
                 }
@@ -239,6 +246,7 @@ public class passcode extends AppCompatActivity {
             }
         });
     }
+
     private void saveUserDetails(String get_id, String passcode) {
         // Save user details in SharedPreferences
         SharedPreferences SharedPreferences = getSharedPreferences("UserDetails", MODE_PRIVATE);

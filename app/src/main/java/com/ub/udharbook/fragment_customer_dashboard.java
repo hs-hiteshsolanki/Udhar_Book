@@ -11,6 +11,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -101,7 +102,9 @@ public class fragment_customer_dashboard extends Fragment {
                 int credit_amount = Integer.parseInt(cursor.getString(4));
                 int debit_amount = Integer.parseInt(cursor1.getString(4));
                 friend_id.add(cursor.getString(0));
+                Log.d("friend_id", String.valueOf(friend_id));
                 transaction_name.add(cursor.getString(1));
+                Log.d("transaction_name", String.valueOf(transaction_name));
                 transaction_phone_number.add(cursor.getString(2));
                 transaction_image.add(BitmapFactory.decodeByteArray(cursor.getBlob(3), 0, cursor.getBlob(3).length));
                 transaction_amount.add((credit_amount - debit_amount));

@@ -13,6 +13,13 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.ub.udharbook.Api.RetrofitClient;
+import com.ub.udharbook.ModelResponse.RegisterResponse;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class recreate_passcode extends AppCompatActivity {
 
     String phone_number;
@@ -25,8 +32,6 @@ public class recreate_passcode extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recreate_passcode);
 
-        //getSupportActionBar().hide();
-        //getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         number1 = findViewById(R.id.number1);
         number2 = findViewById(R.id.number2);
@@ -255,6 +260,7 @@ public class recreate_passcode extends AppCompatActivity {
                         DatabaseHelper myDB = new DatabaseHelper(getApplicationContext());
                         if(myDB.storeUpdateUserPasscode(phone_number,passcode1))
                         {
+                            storeUpdateUserPasscode(phone_number,passcode1);
                             Toast.makeText(recreate_passcode.this, "Your Passcode is sucessfully updated", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(recreate_passcode.this,login.class);
                             startActivity(intent);
@@ -319,6 +325,33 @@ public class recreate_passcode extends AppCompatActivity {
                     number8.setTransformationMethod(new PasswordTransformationMethod());
                     count2=0;
                 }
+            }
+        });
+    }
+
+    private void storeUpdateUserPasscode(String phoneNumber, String passcode1) {
+        Call<RegisterResponse> call = RetrofitClient.getInstance().getApi().storeUpdateUserPasscode(phoneNumber,passcode1);
+        call.enqueue(new Callback<RegisterResponse>() {
+            @Override
+            public void onResponse(Call<RegisterResponse> call, Response<RegisterResponse> response) {
+                if (response.isSuccessful()) {
+                    RegisterResponse updateResponse = response.body();
+                    if (updateResponse != null && updateResponse.getStatus().equals("success")) {
+                        Toast.makeText(recreate_passcode.this, updateResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(recreate_passcode.this, login.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(recreate_passcode.this, "Something went wrong", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(recreate_passcode.this, "Response not successful", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RegisterResponse> call, Throwable t) {
+                Toast.makeText(recreate_passcode.this, "Network error", Toast.LENGTH_SHORT).show();
             }
         });
     }

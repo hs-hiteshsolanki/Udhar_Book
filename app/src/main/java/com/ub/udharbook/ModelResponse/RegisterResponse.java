@@ -5,9 +5,8 @@ import com.google.gson.annotations.SerializedName;
 
 public class RegisterResponse {
 
-//    @SerializedName("status")
-//    @Expose
-//    private String status;
+    @SerializedName("status")
+    private String status;
 
     @SerializedName("message")
     @Expose
@@ -20,14 +19,23 @@ public class RegisterResponse {
     @SerializedName("error")
     private String error;
 
+    @SerializedName("userId")
+    private String userId; // Add this field
 
-//    public String getStatus() {
-//        return status;
-//    }
-//
-//    public void setStatus(String status) {
-//        this.status = status;
-//    }
+    @SerializedName("passcode")
+    private String passcode; // Add this field
+
+    public String getPasscode() {
+        return passcode;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
 
     public String getMessage() {
         return message;
@@ -44,6 +52,7 @@ public class RegisterResponse {
     public void setOtp(String otp) {
         this.otp = otp;
     }
+
     public String getError() {
         return error;
     }
@@ -51,4 +60,6 @@ public class RegisterResponse {
     public void setError(String error) {
         this.error = error;
     }
+
+
 }

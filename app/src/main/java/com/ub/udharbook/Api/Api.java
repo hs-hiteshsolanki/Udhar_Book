@@ -25,6 +25,12 @@ public interface Api {
             @Field("phone") String phone,
             @Field("passcode") String passcode
     );
+    @FormUrlEncoded
+    @POST("storeUpdateUserPasscode.php") // Replace with your actual API endpoint
+    Call<RegisterResponse> storeUpdateUserPasscode(
+            @Field("phone") String userPhoneNo,
+            @Field("passcode") String userPasscode
+    );
 
     @FormUrlEncoded
     @POST("login.php")
@@ -94,6 +100,11 @@ public interface Api {
             @Field("remarks") String remarks,
             @Field("date") String date
     );
+    @FormUrlEncoded
+    @POST("get_transactions1.php")
+    Call<TransactionsResponse> getAllTransactions(
+            @Field("id") String userId
+    );
 
     @FormUrlEncoded
     @POST("debit_transaction_amount.php")
@@ -107,9 +118,5 @@ public interface Api {
             @Field("id") String userId
     );
 
-    @FormUrlEncoded
-    @POST("get_transactions1.php")
-    Call<TransactionsResponse> getAllTransactions(
-            @Field("id") String userId
-    );
+
 }

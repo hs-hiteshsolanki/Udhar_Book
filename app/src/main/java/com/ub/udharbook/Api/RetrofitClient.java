@@ -4,7 +4,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class RetrofitClient {
-    private static String BASE_URL="http://192.168.112.68/udhar_book_api/";
+    private static String BASE_URL="http://192.168.2.68/udhar_book_api/";
     private static RetrofitClient retrofitClient;
     private static Retrofit retrofit;
 
