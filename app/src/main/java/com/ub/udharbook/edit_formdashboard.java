@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
@@ -84,7 +83,7 @@ public class edit_formdashboard extends Fragment {
 //        user_businessname.setText(db_business_name);
 //        user_location.setText(db_location);
 //        user_image.setImageBitmap(db_image);
-        updateUI_sqlite();
+        //updateUI_sqlite();
 
         user_name.addTextChangedListener(new TextWatcher() {
             @Override
@@ -261,26 +260,26 @@ public class edit_formdashboard extends Fragment {
             Bitmap decodedBitmap = BitmapFactory.decodeByteArray(decodedImage, 0, decodedImage.length);
             user_image.setImageBitmap(decodedBitmap);
         }else {
-            updateUI_sqlite();
+            //updateUI_sqlite();
         }
     }
 
-    private void updateUI_sqlite() {
-        DatabaseHelper myDB = new DatabaseHelper(getContext());
-        Cursor cursor = myDB.get_user_details(user_id);
-        while (cursor.moveToNext()) {
-            db_phone_number = cursor.getString(0);
-            db_name = cursor.getString(1);
-            db_business_name = cursor.getString(2);
-            db_location = cursor.getString(3);
-            db_image = BitmapFactory.decodeByteArray(cursor.getBlob(4), 0, cursor.getBlob(4).length);
-        }
-        user_number.setText("+91-" + db_phone_number.substring(2));
-        user_name.setText(db_name);
-        user_businessname.setText(db_business_name);
-        user_location.setText(db_location);
-        user_image.setImageBitmap(db_image);
-    }
+//    private void updateUI_sqlite() {
+//        DatabaseHelper myDB = new DatabaseHelper(getContext());
+//        Cursor cursor = myDB.get_user_details(user_id);
+//        while (cursor.moveToNext()) {
+//            db_phone_number = cursor.getString(0);
+//            db_name = cursor.getString(1);
+//            db_business_name = cursor.getString(2);
+//            db_location = cursor.getString(3);
+//            db_image = BitmapFactory.decodeByteArray(cursor.getBlob(4), 0, cursor.getBlob(4).length);
+//        }
+//        user_number.setText("+91-" + db_phone_number.substring(2));
+//        user_name.setText(db_name);
+//        user_businessname.setText(db_business_name);
+//        user_location.setText(db_location);
+//        user_image.setImageBitmap(db_image);
+//    }
 
     //Gallery permission
     @Override

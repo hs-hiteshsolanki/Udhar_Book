@@ -30,6 +30,8 @@ import com.karumi.dexter.listener.single.PermissionListener;
 import com.ub.udharbook.Api.RetrofitClient;
 import com.ub.udharbook.ModelResponse.RegisterResponse;
 
+import java.util.Random;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -73,7 +75,7 @@ public class otp extends AppCompatActivity {
         phone_number = getIntent().getStringExtra("User_number");
         user_number.setText("+91-"+phone_number.substring(2));
 
-        //generateOtp();
+//        generateOtp();
         generatedOTP();
 
 
@@ -281,8 +283,17 @@ public class otp extends AppCompatActivity {
             @Override
             public void onFailure(Call<RegisterResponse> call, Throwable t) {
                 Toast.makeText(otp.this, "Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                generateOtp();
             }
         });
+    }
+    public void generateOtp(){
+        Random random = new Random();
+        randomNumber = random.nextInt((Max - Min) + 1) + Min;
+        msg = "Your OTP is" + randomNumber;
+        generatedOTP = String.valueOf(randomNumber);
+        Toast.makeText(otp.this, "Otp is " + randomNumber, Toast.LENGTH_SHORT).show();
+        showNotification();
     }
 
     public void verify_otp() {

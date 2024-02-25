@@ -102,6 +102,13 @@ public class login extends AppCompatActivity {
                             intent = new Intent(login.this, passcode.class);
                             intent.putExtra("Id", userId);
                             intent.putExtra("Passcode", passcode);
+//                            DatabaseHelper myDB = new DatabaseHelper(login.this);
+//                            Cursor cursor = myDB.check_usernumber_exist(phoneNumber, 1);
+//                            while (cursor.moveToNext()) {
+//                                database_id = cursor.getString(0);
+//                                database_passcode = cursor.getString(3);
+//                            }
+//                            intent.putExtra("Idu", database_id);
                         }else {
                             // Login failed, show an error message
                             Toast.makeText(login.this, loginResponse.getMessage(), Toast.LENGTH_SHORT).show();

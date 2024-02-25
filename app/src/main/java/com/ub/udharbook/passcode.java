@@ -29,6 +29,7 @@ public class passcode extends AppCompatActivity {
     ImageView redirectback, set_passcode;
     String phone_number, get_passcode, passcode, get_id;
 
+    String get_id1;
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -149,6 +150,7 @@ public class passcode extends AppCompatActivity {
 
         Intent intent = getIntent();
         get_id = intent.getStringExtra("Id");
+        //get_id1 = intent.getStringExtra("Idu");
         get_passcode = intent.getStringExtra("Passcode");
         phone_number = intent.getStringExtra("User_number");
         user_number.setText("+91-" + phone_number.substring(2));
